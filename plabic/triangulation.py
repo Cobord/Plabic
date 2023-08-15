@@ -113,8 +113,8 @@ class Triangulation:
             if corner_21<0:
                 raise ValueError(f"The other corner for {(diag_1,diag_2,corner_12)} wasn't found")
             self.my_quadrilaterals.append((diag_1,corner_12,diag_2,corner_21))
-            aggregated = reduce(lambda acc,x : (acc[0]+x[0],acc[1]+x[1]),self.vertices)
-            self.center : Point = (aggregated[0]/self.num_points,aggregated[1]/self.num_points)
+        aggregated = reduce(lambda acc,x : (acc[0]+x[0],acc[1]+x[1]),self.vertices)
+        self.center : Point = (aggregated[0]/self.num_points,aggregated[1]/self.num_points)
 
     def quad_flip(self,which_diag : Tuple[int,int]) -> Tuple[bool,Tuple[int,int]]:
         """
