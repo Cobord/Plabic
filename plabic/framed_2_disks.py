@@ -66,7 +66,9 @@ class FramedDiskConfig:
         self.internal_circles.extend(other.internal_circles)
         return point_transformation
 
+    #pylint:disable=too-many-arguments
     def draw(self,on_top_of_existing : bool = False,
+             show_as_well : bool = True,
              draw_framing : bool = True,
              external_circle_color : str="black",
              internal_circles_color : str="black"):
@@ -108,10 +110,10 @@ class FramedDiskConfig:
             draw_a_circle(cur_internal,internal_circles_color)
 
         plt.draw()
-        if not on_top_of_existing:
+        if not on_top_of_existing and show_as_well:
             plt.show()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     e = FramedDiskConfig([])
     e.draw()
 

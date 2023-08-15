@@ -3,7 +3,7 @@ test triangulations of convex m-gons
 """
 #pylint:disable=import-error,invalid-name,R0801
 from math import pi as PI,sin,cos
-from triangulation import Triangulation
+from plabic import Triangulation
 
 def test_octagon() -> None:
     """

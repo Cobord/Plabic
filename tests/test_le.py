@@ -4,7 +4,7 @@ test Le diagrams
 
 #pylint:disable=invalid-name,import-error
 from typing import Set
-from le_diagram import LeDiagram
+from plabic import LeDiagram
 
 def test_empty() -> None:
     """

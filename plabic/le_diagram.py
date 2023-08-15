@@ -6,7 +6,7 @@ from enum import Enum, auto
 from typing import List, Optional, Tuple, Set, Iterable, Union, TypeVar, Dict, cast, Iterator
 import itertools
 #pylint:disable=import-error
-from plabic import BiColor, ExtraData, PlabicGraph
+from .plabic_diagram import BiColor, ExtraData, PlabicGraph
 
 #pylint:disable=too-many-locals,too-many-statements,too-many-branches,too-many-return-statements,too-many-instance-attributes
 

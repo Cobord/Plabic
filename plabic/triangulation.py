@@ -7,8 +7,8 @@ from functools import reduce
 import itertools
 from math import sin, cos, pi as PI, atan2, sqrt
 #pylint:disable=import-error
-from plabic import PlabicGraph, BiColor
-from framed_2_disks import FramedDiskConfig
+from .plabic_diagram import PlabicGraph, BiColor
+from .framed_2_disks import FramedDiskConfig
 
 Point = Tuple[float,float]
 

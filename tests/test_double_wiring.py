@@ -3,7 +3,7 @@ test for double wiring diagrams
 """
 #pylint:disable=invalid-name,import-error
 from typing import List
-from double_wiring import WiringDiagram
+from plabic import WiringDiagram
 
 def test_dw1() -> None:
     """

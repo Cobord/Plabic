@@ -10,7 +10,8 @@ from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set
 import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
-from framed_2_disks import FramedDiskConfig
+# pylint:disable=import-error
+from .framed_2_disks import FramedDiskConfig
 
 Point = Tuple[float,float]
 
@@ -1307,10 +1308,27 @@ class PlabicGraph:
              unoriented_arrows_imperfect: str = "black",
              overridden_arrow_orientation : Optional[Callable[[str,str,int],bool]] = None,
              external_circle_color : str = "black",
-             internal_circles_color : str = "black"
+             internal_circles_color : str = "black",
+             show_as_well : bool = True
              ) -> None:
         """
         draw the multigraph without regard to it's planar embedding
+
+        draw_oriented_if_perfect - if the Plabic graph is equipped with a perfect
+            orientation, draw the edges as arrows instead of line segments
+        show_node_names - show the names of the vertices
+        red_nodes,green_nodes,bdry_nodes - the colors of the vertices
+            (adjust for black and white printing or red green colorblindness)
+        oriented_arrows - what color to draw oriented edges
+        unoriented_arrows_perfect,unoriented_arrows_imperfect - if the Plabic graph
+            is equipped with a perfect orientation and we are drawing edges without
+            orientation then what color to mark the perfect/imperfect edges
+        overridden_arrow_orientation - a function which takes the two endpoints
+            and key (for multiedges) and if the output is false
+            then it doesn't draw that arrowhead for that orientation of the edge
+        external_circle_color,internal_circles_color - if the boundaries are on circles
+            in a FramedDiskConfig then what color to draw those framed circles
+        show_as_well - show right away or let the caller do the plt.show
         """
         color_dict = {BiColor.RED: red_nodes, BiColor.GREEN: green_nodes}
 
@@ -1376,8 +1394,10 @@ class PlabicGraph:
                 arrows=draw_arrowheads, with_labels=show_node_names)
         if self.circles_config is not None:
             self.circles_config.draw(on_top_of_existing=True,
+                show_as_well=False,
                 draw_framing=False,
                 external_circle_color=external_circle_color,
                 internal_circles_color=internal_circles_color)
         plt.draw()
-        plt.show()
+        if show_as_well:
+            plt.show()
