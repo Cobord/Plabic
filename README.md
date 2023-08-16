@@ -1,12 +1,10 @@
 # Plabic
 Cluster algebraic/geometric structures related to plabic graphs
 
-# Requirements
+## Requirements
 
-matplotlib
-networkx
-numpy
-sympy
+matplotlib, networkx, numpy, sympy
+
 
 # Framed 2 Disks
 
@@ -156,5 +154,3 @@ for creating a Double wiring diagram for S_5 x S_5 which consists of s_1 s_{-2} 
 c1,c2 in the chamber minors are sets of integers. They indicate taking rows that are in c1 and columns that are in c2. For how they are determined by a double wiring diagram, see the original Fomin-Zelivinsky papers.
 
 to_plabic gives the corresponding Plabic graph. The vertices are automatically given positions in the plane and if the diagram ends up being bipartite, then it the Plabic graph produced also includes a pre-chosen perfect orientation.
-
-# 
