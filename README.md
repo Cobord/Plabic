@@ -135,9 +135,49 @@ p.draw()
 
 # Le Diagram
 
+```
+from plabic import LeDiagram
+my_Le = LeDiagram([[0,1,0,1,0],[1,1,0,1],[0,0],[0,1]])
+second_col = my_Le.column_height(1)
+for (a,b) in my_Le.nw_path((3,1),False):
+    pass
+my_grassman_necklace = my_Le.to_grassmann_necklace(7,7)
+my_Le_again = LeDiagram.from_grassmann_necklace(my_grassmann_necklace)
+p = my_Le.to_plabic()
+```
+
+One may also construct the Le Diagram with True/False filling instead of 1/0.
+
+We can query the heights of the columns. The lengths of the rows are just len(my_Le.filling[row_number])
+
+We can iterate through the path that always going strictly northwest which starts at the nearest 1 strictly/weakly northwest of a starting cur_loc.
+That is helped by a nw_path_next method.
+
+Conversion to Grassmann necklaces proceeds by providing the bounding rectangle (first k second n). The output Grassmann necklace is a list of sets of integers. Each neighboring pair of sets satisfies the condition for being a Grassmann necklace which indicates precisely how those two sets can differ.
+
+Conversely we can go back from a Grassmann necklace to a Le Diagram. One can optionally provide the n and k which are the length of the necklace and the sizes of the sets (they are all the same size by the Grassmann condition).
+
+The Plabic Graph produced from the Le Diagram follows the standard rules based on positions of 1's. The vertices are positioned inside the boxes of the Young diagram as they would appear in English notation with all the boxes being unit squares.
+
 # Triangulation
 
-# Planar Diagram
+```
+from plabic import Triangulation
+from math import sin, cos, pi as PI
+N = 8
+my_diagonals = [(4,7),(2,8),(2,4),(2,7),(4,6)]
+RADIUS = 2
+t = Triangulation([ (RADIUS*cos(2*PI*which/N),RADIUS*sin(2*PI*which/N))
+                       for which in range(N)], [(x-1,y-1) for x,y in my_diagonals])
+change, new_diag = t.quad_flip((1,3))
+p = t.to_plabic()
+```
+
+We create a triangulation of a convex N-gon by specfying the locations of the vertices 1 through N and the diagonals. Here the diagonal (4,7) means vertex 4 and 7 are connected by a diagonal (with the -1's for zero indexing). From the diagonals the triangles are all deterrmined as well as all the respective quadrilaterals each diagonal is part off with it's two neighboring triangles.
+
+Then we can do diagonal flip moves on the triangulation by specifying which diagonal to flip. Here we are flipping the diagonal which connects vertex 2 and vertex 4 (off by 1 due to zero indexing). If the specified input was not a diagonal of a quadrilateral that could be flipped, then the first output indicating whether the Triangulation has changed will be False. Otherwise we will get True and the new diagonal which was the other diagonal of the relevant quadrilateral.
+
+This produces a special Plabic Graph. There are internal and external vertices for each vertex of the polygon and internal vertices for each triangle. The external vertices corresponding to the polygon vertices are connected to the corresponding internal vertex. The vertices for the triangles are connected to the vertices for their corners. This Plabic Graph gets a perfect orientation. If all the vertices of the N-gon were on a circle like above, then a FramedDiskConfig with 0 internal circles is also produced. When the Plabic Graph produced from the Triangulation is drawn, that circle will also be drawn passing through all the boundary vertices.
 
 # Double Wiring Diagrams
 
@@ -154,3 +194,25 @@ for creating a Double wiring diagram for S_5 x S_5 which consists of s_1 s_{-2} 
 c1,c2 in the chamber minors are sets of integers. They indicate taking rows that are in c1 and columns that are in c2. For how they are determined by a double wiring diagram, see the original Fomin-Zelivinsky papers.
 
 to_plabic gives the corresponding Plabic graph. The vertices are automatically given positions in the plane and if the diagram ends up being bipartite, then it the Plabic graph produced also includes a pre-chosen perfect orientation.
+
+# Planar Diagram
+
+```
+from plabic import PlanarNetwork
+p = PlanarNetwork(3, edge_list=[[(3, 2, A), (3, 3, ONE)], [(3, 2, C), (2, 1, B)], [
+                      (2, 2, E), (1, 1, D)], [(3, 3, F), (2, 3, G), (1, 2, H)], [(2, 3, I)]],
+                      multiplicative_identity=ONE,
+                      additive_identity=ZERO)
+a_12 = p.weight_matrix(1,2)
+Delta_12_23 = p.lindstrom_minor(set([1,2]),set([2,3]))
+assert p.totally_nonnegative(lambda letter : is_nonnegative_variable(letter))
+assert p.positive(lambda letter : is_positive_variable(letter))
+```
+
+Consider the example in https://arxiv.org/pdf/math/9912128.pdf figure 1. We can see there are 3 horizontal lines as the first input states. The second input is the edge_list which describes the edges as read left to right in the figure along with variables A-I for their weights, and some being labelled with weight ONE. We can specify the multiplicative and additive identity. They default to 1.0 and 0.0 but if we want to work symbolically or with other number systems this provides the capability to do so.
+
+We can then determine the ij entry of the weight matrix which is given by a sum of products expression in the edge weights for paths connecting i on one side of the diagram to j on the other.
+
+Lindstrom Minor uses the Lindstrom lemma to compute the specified minor of the weight matrix via a similar sum of products formula with systems of paths connecting the vertices in one set on the left side to vertices in the other set on the right side.
+
+The 2 totally_nonnegative/positive query methods take the diagram and a function which says whether or not a given edge weight is nonnegative/positive and deduces whether the weight matrix also is totally nonnegative/totally positive. This is when we have defined A-I via sympy to be unspecified variables that we will later interpret to only take nonnegative/positive values.
