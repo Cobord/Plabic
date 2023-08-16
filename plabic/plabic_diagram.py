@@ -41,6 +41,7 @@ class PlabicGraphBuilder:
     internal_bdry_orientations: Optional[List[List[str]]]
     extra_node_props: Optional[Dict[str, ExtraData]]
     have_multi_edges : Set[Tuple[str,str]]
+    circles_config : Optional[FramedDiskConfig]
 
     def __init__(self):
         self.my_init_data = {}
@@ -53,6 +54,7 @@ class PlabicGraphBuilder:
         self.internal_bdry_orientations = None
         self.extra_node_props = None
         self.have_multi_edges = set()
+        self.circles_config = None
 
     def set_num_external(self,num_ext : int) -> None:
         """
@@ -152,6 +154,17 @@ class PlabicGraphBuilder:
         """
         self.multi_edge_permutation[(vertex_a,vertex_b)] = how_keys_match
 
+    def set_circles_config(self,circles_config : FramedDiskConfig) -> None:
+        """
+        if all the positions of the boundary vertices are set,
+        then we can set the circles that they all lie on
+        """
+        if not all(self.is_set_externals):
+            raise ValueError("Not finished setting externals")
+        if self.is_set_internals is not None and not all(all(z) for z in self.is_set_internals):
+            raise ValueError("Not finished setting internals")
+        self.circles_config = circles_config
+
     def build(self) -> PlabicGraph:
         """
         use all the instance attributes in arguments to
@@ -170,7 +183,8 @@ class PlabicGraphBuilder:
                  self.external_init_orientation,
                  self.multi_edge_permutation,
                  self.internal_bdry_orientations,
-                 self.extra_node_props)
+                 self.extra_node_props,
+                 self.circles_config)
 
 # pylint:disable=too-many-public-methods,too-many-instance-attributes
 class PlabicGraph:
