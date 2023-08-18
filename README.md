@@ -144,6 +144,7 @@ for (a,b) in my_Le.nw_path((3,1),False):
 my_grassman_necklace = my_Le.to_grassmann_necklace(7,7)
 my_Le_again = LeDiagram.from_grassmann_necklace(my_grassmann_necklace)
 p = my_Le.to_plabic()
+_ = my_Le.to_special_bruhat_interval(bounding_k,bounding_n)
 ```
 
 One may also construct the Le Diagram with True/False filling instead of 1/0.
@@ -158,6 +159,9 @@ Conversion to Grassmann necklaces proceeds by providing the bounding rectangle (
 Conversely we can go back from a Grassmann necklace to a Le Diagram. One can optionally provide the n and k which are the length of the necklace and the sizes of the sets (they are all the same size by the Grassmann condition).
 
 The Plabic Graph produced from the Le Diagram follows the standard rules based on positions of 1's. The vertices are positioned inside the boxes of the Young diagram as they would appear in English notation with all the boxes being unit squares.
+
+There is also a method which produces a pair of permutations in interval format. If we call them v and w respectively, then v<=w and so we put them
+in a Bruhat Interval. The w is k-Grassmannian for the k which is specified by the bounding box. They are both permutations of n which is also specified by the bounding box as the sum of the width and height.
 
 # Triangulation
 
@@ -216,3 +220,22 @@ We can then determine the ij entry of the weight matrix which is given by a sum 
 Lindstrom Minor uses the Lindstrom lemma to compute the specified minor of the weight matrix via a similar sum of products formula with systems of paths connecting the vertices in one set on the left side to vertices in the other set on the right side.
 
 The 2 totally_nonnegative/positive query methods take the diagram and a function which says whether or not a given edge weight is nonnegative/positive and deduces whether the weight matrix also is totally nonnegative/totally positive. This is when we have defined A-I via sympy to be unspecified variables that we will later interpret to only take nonnegative/positive values.
+
+# (Bounded) Affine Permutations
+
+There are many ways to construct these.
+
+- We can specify where several integers go enough to completely pin down everything with that and shift equivariance.
+- We may use a list of the Coxeter generators where the Coxeter graph is affine An
+- We may use juggling patterns
+- We may specify a decorated trip permutation and produce a bounded affine permutation from that
+- We may multiply, invert and concatenate to build from smaller examples
+
+There are several generators which yield all sorts of (bounded) affine permutations with various properties
+
+- All bounded affine permutations for a given n
+- Everything in S_n up to given Coxeter lengths (inessentially embedded into the affine case for common interface)
+- Everything in S_k times S_{n-k} (inessentially embedded into the affine case for common interface)
+- Everything in the affine symmetric group up to a given Coxeter length
+- Iterating through Q_{k,N} by lengths of the two factors (which form endpoints of a Bruhat interval)
+- Shifts of such Bruhat intervals using the other generators
