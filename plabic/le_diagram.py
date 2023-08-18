@@ -5,8 +5,10 @@ Le Diagram
 from enum import Enum, auto
 from typing import List, Optional, Tuple, Set, Iterable, Union, TypeVar, Dict, cast, Iterator
 import itertools
+
 #pylint:disable=import-error
 from .plabic_diagram import BiColor, ExtraData, PlabicGraph
+from .ba_permutation import AffinePermutation, BruhatInterval
 
 #pylint:disable=too-many-locals,too-many-statements,too-many-branches,too-many-return-statements,too-many-instance-attributes
 
@@ -642,6 +644,33 @@ class LeDiagram:
         if not isinstance(other,LeDiagram):
             return False
         return self.filling == other.filling
+
+    def to_special_bruhat_interval(self,
+                                   bounding_k : int,
+                                   bounding_n : int)\
+                                    -> BruhatInterval:
+        """
+        From a Le diagram and bounding box (K by N-K)
+        get a pair of v and w in S_N
+        with v<=w
+        and w being K-Grassmannian
+        """
+        if bounding_k<=0 or bounding_n-bounding_k<=0:
+            raise ValueError("Dimensions of bounding box should be positive")
+        if bounding_k<self.height or bounding_n-bounding_k<self.width:
+            raise ValueError(f"Want to fit inside a {bounding_k} by {bounding_n-bounding_k} box")
+        v_word = []
+        w_word = []
+        for (idx,cur_row) in enumerate(self.filling):
+            for (jdx,cur_box) in enumerate(cur_row):
+                w_word.append(bounding_k+idx-jdx)
+                if not cur_box:
+                    v_word.append(bounding_k+idx-jdx)
+        v_word.reverse()
+        w_word.reverse()
+        v_perm = AffinePermutation(coxeter_word=v_word,n_val=bounding_n)
+        w_perm = AffinePermutation(coxeter_word=w_word,n_val=bounding_n)
+        return BruhatInterval(v_perm,w_perm)
 
 if __name__ == "__main__":
 

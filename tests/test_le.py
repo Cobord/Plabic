@@ -99,3 +99,24 @@ def test_from_Grassmann() -> None:
     assert p.my_perfect_matching is None
     did_scale_up = p.coordinate_transform(lambda z: (z[0]*2,z[1]*2))
     assert did_scale_up
+
+def test_bruhat_interval() -> None:
+    """
+    Example 3.3
+    https://www.math.ucla.edu/~galashin/papers/plabic_links.pdf
+    """
+    bounding_k = 4
+    bounding_n = 8
+    my_Le = LeDiagram([[1,1,0,1],[1,1,0,1],[0,1,1,1],[1]])
+    bruhat_interval = my_Le.to_special_bruhat_interval(bounding_k,bounding_n)
+    w_exp = [7,3,4,5,6,2,3,4,5,1,2,3,4]
+    v_exp = [6,3,2]
+    assert bruhat_interval.v.my_coxeter_word == v_exp
+    assert bruhat_interval.w.my_coxeter_word == w_exp
+    is_k_Grassmannian, which_k = bruhat_interval.w.is_k_grassmannian()
+    assert is_k_Grassmannian and which_k == 4
+    assert bruhat_interval.w_finite
+    assert bruhat_interval.v_finite
+    assert bruhat_interval.w_len == len(w_exp)
+    assert bruhat_interval.v_len == len(v_exp)
+    assert not bruhat_interval.manifestly_empty
