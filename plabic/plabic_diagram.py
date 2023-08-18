@@ -1230,7 +1230,8 @@ class PlabicGraph:
 
         return True, "Success"
 
-    def bdry_to_bdry(self, starting_bdry_node: str) -> Tuple[Optional[BiColor], str]:
+    def bdry_to_bdry(self, starting_bdry_node: str,
+                     care_about_lollipop : bool = True) -> Tuple[Optional[BiColor], str]:
         """
         starting at a boundary vertex follow the rules of the road until another
         boundary vertex (possibly the same one)
@@ -1247,7 +1248,7 @@ class PlabicGraph:
                 at_this_node, was_at_this_before, via_edge_keyed)
             if next_node is None:
                 if at_this_node == starting_bdry_node:
-                    if len(turn_around_colors) == 0:
+                    if len(turn_around_colors) == 0 or not care_about_lollipop:
                         return None, at_this_node
                     if path_length == 2:
                         return turn_around_colors[0], at_this_node
