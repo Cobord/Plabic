@@ -42,6 +42,7 @@ class PlabicGraphBuilder:
     extra_node_props: Optional[Dict[str, ExtraData]]
     have_multi_edges : Set[Tuple[str,str]]
     circles_config : Optional[FramedDiskConfig]
+    all_names_anywhere : Set[str]
 
     def __init__(self):
         self.my_init_data = {}
@@ -55,6 +56,7 @@ class PlabicGraphBuilder:
         self.extra_node_props = None
         self.have_multi_edges = set()
         self.circles_config = None
+        self.all_names_anywhere = set()
 
     def set_num_external(self,num_ext : int) -> None:
         """
@@ -80,6 +82,7 @@ class PlabicGraphBuilder:
         """
         set the extra_node_props for a specific vertex
         """
+        self.all_names_anywhere.add(vertex_name)
         if extras is not None:
             if self.extra_node_props is None:
                 self.extra_node_props = {}
@@ -94,7 +97,9 @@ class PlabicGraphBuilder:
         end
         any extra information want on that node is also provided
         """
+        self.all_names_anywhere.add(vertex_name)
         for name in clockwise_nhbrs:
+            self.all_names_anywhere.add(name)
             if clockwise_nhbrs.count(name)>1:
                 self.have_multi_edges.add((vertex_name,name))
                 self.have_multi_edges.add((name,vertex_name))
@@ -113,6 +118,8 @@ class PlabicGraphBuilder:
         """
         if idx<0 or idx>=self.num_external_vertices:
             raise ValueError(f"{self.num_external_vertices} external vertices allowed")
+        self.all_names_anywhere.add(external_vertex_name)
+        self.all_names_anywhere.add(my_internal_connection)
         self.my_init_data[external_vertex_name] = (BiColor.RED,[my_internal_connection])
         self.external_init_orientation[idx] = external_vertex_name
         self.is_set_externals[idx] = True
@@ -141,6 +148,8 @@ class PlabicGraphBuilder:
         if where_in_that_circle<0 or where_in_that_circle>=self.internal_circles_nums[which_circle]:
             raise ValueError(
                 f"{where_in_that_circle} is not available on internal circle {which_circle}")
+        self.all_names_anywhere.add(internal_bdry_vertex_name)
+        self.all_names_anywhere.add(my_internal_connection)
         self.my_init_data[internal_bdry_vertex_name] = (BiColor.RED,[my_internal_connection])
         self.internal_bdry_orientations[which_circle][where_in_that_circle] = \
             internal_bdry_vertex_name
@@ -152,6 +161,8 @@ class PlabicGraphBuilder:
         set the permutation of half-edges if there are multiple edges connecting
         vertex_a and vertex_b
         """
+        self.all_names_anywhere.add(vertex_a)
+        self.all_names_anywhere.add(vertex_b)
         self.multi_edge_permutation[(vertex_a,vertex_b)] = how_keys_match
 
     def set_circles_config(self,circles_config : FramedDiskConfig) -> None:
@@ -164,6 +175,65 @@ class PlabicGraphBuilder:
         if self.is_set_internals is not None and not all(all(z) for z in self.is_set_internals):
             raise ValueError("Not finished setting internals")
         self.circles_config = circles_config
+
+    # pylint:disable = too-many-locals
+    def rename(self, old_name : str , new_name : str) -> None:
+        """
+        Change all occurences of vertex name old_name to new_name
+        """
+        if old_name not in self.all_names_anywhere:
+            return
+        if new_name in self.all_names_anywhere:
+            raise ValueError(" ".join([
+                f"{new_name} was already a vertex name, so this",
+                "renaming would cause name collisions"]))
+
+        def replace_in_list(name_list : List[str]) -> bool:
+            """
+            in place replacement in a list of old_name with new_name
+            """
+            any_changes = False
+            for idx, item in enumerate(name_list):
+                if item == old_name:
+                    name_list[idx] = new_name
+                    any_changes = True
+            return any_changes
+        def fix_name(a_name : str) -> str:
+            """
+            the modified name
+            """
+            return new_name if a_name==old_name else a_name
+
+        try:
+            old_data = self.my_init_data.pop(old_name)
+            _ = replace_in_list(old_data[1])
+            self.my_init_data[new_name] = (old_data[0],old_data[1])
+        except KeyError:
+            pass
+        for _,value in self.my_init_data.items():
+            _ = replace_in_list(value[1])
+        _ = replace_in_list(self.external_init_orientation)
+        needs_renamings = [k for k in self.multi_edge_permutation if old_name in k]
+        for key in needs_renamings:
+            old_value = self.multi_edge_permutation.pop(key)
+            new_key = (fix_name(key[0]),fix_name(key[1]))
+            self.multi_edge_permutation[new_key] = old_value
+        if self.internal_bdry_orientations is not None:
+            for cur_list in self.internal_bdry_orientations:
+                _ = replace_in_list(cur_list)
+        if self.extra_node_props is not None:
+            try:
+                old_extra_data = self.extra_node_props.pop(old_name)
+                self.extra_node_props[new_name] = old_extra_data
+            except KeyError:
+                pass
+        bad_multi_tuples = [k for k in self.have_multi_edges if old_name in k]
+        for bad_tuple in bad_multi_tuples:
+            good_tuple = (fix_name(bad_tuple[0]),fix_name(bad_tuple[1]))
+            self.have_multi_edges.remove(bad_tuple)
+            self.have_multi_edges.add(good_tuple)
+        self.all_names_anywhere.remove(old_name)
+        self.all_names_anywhere.add(new_name)
 
     def build(self) -> PlabicGraph:
         """

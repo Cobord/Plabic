@@ -162,12 +162,14 @@ def test_all_finite_perms():
 
 def test_all_parabolic_perms():
     """
-    Get all finite permutations up to given length
+    Get all parabolic permutations
     when do the full iterator
     """
     my_n = 9
     my_k = 5
+    # all 120 of S_{my_k = 5} by length
     sk_by_length = [1, 4, 9, 15, 20, 22, 20, 15, 9, 4, 1]
+    # all 24 of S_{my_n-my_k = 4} by length
     s_nmk_by_length = [1, 3, 5, 6, 5, 3, 1]
     max_len = len(sk_by_length)+len(s_nmk_by_length)-2
     counts = {z_var:0 for z_var in range(max_len+1)}
