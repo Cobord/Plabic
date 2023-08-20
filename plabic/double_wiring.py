@@ -38,6 +38,9 @@ class WiringDiagram:
         self.num_negative_letters = sum(1 if z<0 else 0 for z in my_word)
         self.is_positive_order_flip = False
         self.is_negative_order_flip = False
+        self.final_positive_wires = list(range(1,self.my_n+1))
+        self.final_negative_wires = list(range(1,self.my_n+1))
+        self.final_negative_wires.reverse()
         for _ in self.chamber_minors():
             pass
 
@@ -65,8 +68,10 @@ class WiringDiagram:
             else:
                 negative_lines[abs_cur_word],negative_lines[abs_cur_word-1] = \
                     negative_lines[abs_cur_word-1],negative_lines[abs_cur_word]
-        self.is_positive_order_flip = positive_lines_below == list(range(self.my_n,0,-1))
-        self.is_negative_order_flip = negative_lines_below == list(range(self.my_n,0,-1))
+        self.final_positive_wires = positive_lines.copy()
+        self.final_negative_wires = negative_lines.copy()
+        self.is_positive_order_flip = positive_lines == list(range(self.my_n,0,-1))
+        self.is_negative_order_flip = negative_lines == list(range(1,self.my_n+1))
         for pretend_letter in range(1,self.my_n+1):
             positive_lines_below = positive_lines[0:pretend_letter]
             negative_lines_below = negative_lines[0:pretend_letter]

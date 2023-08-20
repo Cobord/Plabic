@@ -249,6 +249,9 @@ class PlabicGraphBuilder:
             ba_in_multi = (vertex_b,vertex_a) in self.multi_edge_permutation
             if not ab_in_multi and not ba_in_multi:
                 raise ValueError("Not finished setting for multi-edges")
+        for vertex_name in self.all_names_anywhere:
+            if vertex_name not in self.my_init_data:
+                raise ValueError("Not finished setting neighbors of all vertices")
         return PlabicGraph(self.my_init_data,
                  self.external_init_orientation,
                  self.multi_edge_permutation,
