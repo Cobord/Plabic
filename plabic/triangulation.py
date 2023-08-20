@@ -149,6 +149,53 @@ class Triangulation:
         self.my_triangles.append((relevant_quad[1],relevant_quad[0],relevant_quad[3]))
         return True, (relevant_quad[1],relevant_quad[3])
 
+    def to_frieze(self) -> str:
+        """
+        The associated SL2 frieze pattern as it is printed out
+        """
+        num_rows = self.num_points-1
+        width_bound = 2*self.num_points
+        pattern = [[0 for col in range(width_bound)] for row in range(num_rows)]
+        for idx in range(width_bound):
+            pattern[0][idx] = 1
+            pattern[num_rows-1][idx] = 1
+        how_many_triangles = [0]*self.num_points
+        for tri in self.my_triangles:
+            (ver_a,ver_b,ver_c) = tri
+            how_many_triangles[ver_a] += 1
+            how_many_triangles[ver_b] += 1
+            how_many_triangles[ver_c] += 1
+        for idx in range(width_bound):
+            pattern[1][idx] = how_many_triangles[idx%self.num_points]
+        for row_num in range(2,num_rows-1):
+            if row_num%2==0:
+                for idx in range(row_num//2-1,width_bound-row_num//2):
+                    numerator = pattern[row_num-1][idx]*pattern[row_num-1][idx+1]-1
+                    pattern[row_num][idx] = numerator//(pattern[row_num-2][idx])
+            else:
+                for idx in range(row_num//2,width_bound-row_num//2):
+                    numerator = pattern[row_num-1][idx]*pattern[row_num-1][idx-1]-1
+                    pattern[row_num][idx] = numerator//(pattern[row_num-2][idx])
+        max_num_digits = 1
+        for row_num in range(num_rows):
+            for (idx,entry) in enumerate(pattern[row_num]):
+                max_num_digits = max(max_num_digits,len(str(entry)))
+                if entry==0:
+                    if idx+self.num_points<width_bound and \
+                        pattern[row_num][idx+self.num_points] !=0:
+                        pattern[row_num][idx] = pattern[row_num][idx+self.num_points]
+                    elif idx>self.num_points and \
+                        pattern[row_num][idx-self.num_points] !=0:
+                        pattern[row_num][idx] = pattern[row_num][idx-self.num_points]
+        spacer = " "*max_num_digits
+        questioner = "?"*max_num_digits
+        row_strings = (spacer.join([
+            questioner if x==0 else str(x)
+            for x in pattern[cur_row]])
+            for cur_row in range(num_rows))
+        return "\n".join((f" {row_string}" if jdx % 2==0 else row_string
+                          for jdx,row_string in enumerate(row_strings)))
+
     def to_plabic(self) -> PlabicGraph:
         """
         a plabic graph whose quiver is the same
@@ -255,3 +302,17 @@ if __name__ == '__main__':
     p = t.to_plabic()
     print(f"Perfect matching : {p.my_perfect_matching}")
     p.draw()
+
+    N = 5
+    my_diagonals = [(1,3),(1,4)]
+    RADIUS = 2
+    t = Triangulation([ (RADIUS*cos(2*PI*which/N),RADIUS*sin(2*PI*which/N))
+                       for which in range(N)], [(x-1,y-1) for x,y in my_diagonals])
+    print(t.to_frieze())
+
+    N = 8
+    my_diagonals = [(8,6),(8,5),(5,3),(1,3),(8,3)]
+    RADIUS = 4
+    t = Triangulation([ (RADIUS*cos(2*PI*which/N),RADIUS*sin(2*PI*which/N))
+                       for which in range(N)], [(x-1,y-1) for x,y in my_diagonals])
+    print(t.to_frieze())

@@ -170,6 +170,8 @@ class PlabicGraphBuilder:
         if all the positions of the boundary vertices are set,
         then we can set the circles that they all lie on
         """
+        if len(circles_config.internal_circles) != len(self.internal_circles_nums):
+            raise ValueError("There are not the right number of internal circles")
         if not all(self.is_set_externals):
             raise ValueError("Not finished setting externals")
         if self.is_set_internals is not None and not all(all(z) for z in self.is_set_internals):

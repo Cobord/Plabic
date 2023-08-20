@@ -64,6 +64,8 @@ information to PlabicGraph construction immediately, but that is beyond the scop
 
 There is also a method for set_multi_edges but that is only relevant when there are multiple edges between two vertices and/or self loops.
 
+You are also allowed to rename vertices as long as the new name would not cause a name collision with a name already present.
+
 ## Plabic Graph
 
 ```
