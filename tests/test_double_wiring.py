@@ -11,8 +11,8 @@ def test_dw1() -> None:
     """
     double_word = [-2,1,2,-1,-2,1]
     dw = WiringDiagram(3,double_word)
-    assert dw.is_positive_order_flip
-    assert dw.is_negative_order_flip
+    assert dw.is_flip(True)
+    assert dw.is_flip(False)
     expected_chamber_minors = [
         (set([1,2]),set([2,3])),
         (set([1]),set([3])),
@@ -49,9 +49,8 @@ def test_dw3() -> None:
     """
     double_word = [1]
     dw = WiringDiagram(2,double_word)
-    assert dw.is_positive_order_flip
-    assert not dw.is_negative_order_flip
-    assert dw.final_negative_wires == [2,1]
+    assert dw.is_flip(True)
+    assert not dw.is_flip(False)
     p = dw.to_plabic()
     assert p.is_bipartite()
     assert p.my_extra_props == set(["position","my_perfect_edge"])
@@ -66,10 +65,8 @@ def test_dw4() -> None:
     double_word = [1,-1]
     dw = WiringDiagram(2,double_word)
     p = dw.to_plabic()
-    assert dw.is_positive_order_flip
-    assert dw.is_negative_order_flip
-    assert dw.final_negative_wires == [1,2]
-    assert dw.final_positive_wires == [2,1]
+    assert dw.is_flip(True)
+    assert dw.is_flip(False)
     assert p.my_extra_props == set(["position","my_perfect_edge"])
     assert p.my_perfect_matching == set([("wire1,0","wire2,0",1),
                                          ("wire2,0","wire1,0",2),

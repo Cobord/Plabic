@@ -2,11 +2,12 @@
 double wiring diagram
 also include single wiring diagram
 """
-
+from __future__ import annotations
 from functools import reduce
 from typing import Tuple,List,Dict,Iterator,Set,Any,cast
 #pylint:disable=import-error
 from .plabic_diagram import PlabicGraph, BiColor
+from .ba_permutation import AffinePermutation
 
 Point = Tuple[float,float]
 
@@ -36,13 +37,42 @@ class WiringDiagram:
         self.my_n = my_n
         self.num_positive_letters = sum(1 if z>0 else 0 for z in my_word)
         self.num_negative_letters = sum(1 if z<0 else 0 for z in my_word)
-        self.is_positive_order_flip = False
-        self.is_negative_order_flip = False
-        self.final_positive_wires = list(range(1,self.my_n+1))
-        self.final_negative_wires = list(range(1,self.my_n+1))
-        self.final_negative_wires.reverse()
-        for _ in self.chamber_minors():
-            pass
+        self.positive_permutation = \
+            AffinePermutation(coxeter_word=[z for z in my_word if z>0],n_val=my_n)
+        self.negative_permutation = \
+            AffinePermutation(coxeter_word=[-z for z in my_word if z<0],n_val=my_n)
+
+    def is_flip(self,pos_or_neg : bool) -> bool:
+        """
+        is the permutation on the positive/negative strands the longest word
+        """
+        long_perm = list(range(self.my_n,0,-1))
+        if pos_or_neg:
+            return self.positive_permutation.quot_to_sn() == long_perm
+        return self.negative_permutation.quot_to_sn() == long_perm
+
+    def __mul__(self, other) -> WiringDiagram:
+        if self.my_n != other.my_n:
+            raise ValueError("The two diagrams must have the same number of wires to multiply")
+        return WiringDiagram(self.my_n,self.my_word+other.my_word)
+
+    def side_by_side(self, other) -> WiringDiagram:
+        """
+        stack the two diagrams vertically
+        so that there is no interaction between them
+        self affects the first self.my_n
+        other affects the last other.my_n
+        """
+        def fix_other_letter(other_letter : int) -> int:
+            """
+            S_m -> S_n+m on the coxeter generators
+            """
+            if other_letter<0:
+                return other_letter-self.my_n
+            return other_letter + self.my_n
+        new_word = self.my_word.copy()
+        new_word.extend(fix_other_letter(z) for z in other.my_word)
+        return WiringDiagram(self.my_n+other.my_n,new_word)
 
     def chamber_minors(self) -> Iterator[Tuple[Set[int],Set[int]]]:
         """
@@ -68,10 +98,6 @@ class WiringDiagram:
             else:
                 negative_lines[abs_cur_word],negative_lines[abs_cur_word-1] = \
                     negative_lines[abs_cur_word-1],negative_lines[abs_cur_word]
-        self.final_positive_wires = positive_lines.copy()
-        self.final_negative_wires = negative_lines.copy()
-        self.is_positive_order_flip = positive_lines == list(range(self.my_n,0,-1))
-        self.is_negative_order_flip = negative_lines == list(range(1,self.my_n+1))
         for pretend_letter in range(1,self.my_n+1):
             positive_lines_below = positive_lines[0:pretend_letter]
             negative_lines_below = negative_lines[0:pretend_letter]
