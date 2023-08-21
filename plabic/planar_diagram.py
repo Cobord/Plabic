@@ -89,6 +89,7 @@ class PlanarNetwork:
                 raise ValueError(
                     "Either edge_list must be given or both chip_word and chip_weights")
         self.chip_type: Optional[ChipWord] = [] if chip_word is None else chip_word
+        # edge_list.append([(idx,idx,multiplicative_identity) for idx in range(1,n+1)])
         for stage_num,stage in enumerate(edge_list):
             already_incremented = []
             for edge in stage:
@@ -203,7 +204,8 @@ class PlanarNetwork:
         all_positions = {z: self._underlying_graph.nodes[z]["position"]
                          for z in all_node_names}
         all_edge_labels = {z: str(self._underlying_graph.edges[z]["weight"])
-                           for z in list(self._underlying_graph.edges())}
+                           for z in list(self._underlying_graph.edges())
+                           if self._underlying_graph.edges[z]["weight"] != self.multiplicative_identity}
         nx.draw(
             self._underlying_graph,pos=all_positions,with_labels=False)
         nx.draw_networkx_edge_labels(
