@@ -8,6 +8,7 @@ from typing import runtime_checkable, Protocol, Any
 import itertools
 from functools import reduce
 import networkx as nx
+import matplotlib.pyplot as plt
 
 T = TypeVar("T")
 
@@ -78,7 +79,7 @@ class PlanarNetwork:
         self.additive_identity = additive_identity
         self.totally_connected = totally_connected
         for x in range(1, n+1):
-            self._underlying_graph.add_node(f"{x}_0")
+            self._underlying_graph.add_node(f"{x}_0",position=(0,x))
         sink_number = {x: 0 for x in range(1, n+1)}
         if edge_list is None:
             if chip_word is not None and chip_weights is not None:
@@ -88,7 +89,7 @@ class PlanarNetwork:
                 raise ValueError(
                     "Either edge_list must be given or both chip_word and chip_weights")
         self.chip_type: Optional[ChipWord] = [] if chip_word is None else chip_word
-        for stage in edge_list:
+        for stage_num,stage in enumerate(edge_list):
             already_incremented = []
             for edge in stage:
                 from_node, to_node, cur_weight = edge
@@ -113,7 +114,8 @@ class PlanarNetwork:
                     self._underlying_graph.add_edge(f"{to_node}_{to_number-1}",
                                                     f"{to_node}_{to_number}", weight=multiplicative_identity)
                     already_incremented.append(to_node)
-                self._underlying_graph.add_node(f"{to_node}_{to_number}")
+                to_position = (stage_num+1,to_node)
+                self._underlying_graph.add_node(f"{to_node}_{to_number}",position=to_position)
                 self._underlying_graph.add_edge(f"{from_node}_{from_number}",
                                                 f"{to_node}_{to_number}", weight=cur_weight)
         self.sink_number = sink_number
@@ -192,6 +194,25 @@ class PlanarNetwork:
         if not had_contribution:
             self.totally_connected = False
         return minor_value
+
+    def draw(self,show_as_well=True) -> None:
+        """
+        draw with the edge weights
+        """
+        all_node_names = list(self._underlying_graph.nodes())
+        all_positions = {z: self._underlying_graph.nodes[z]["position"]
+                         for z in all_node_names}
+        all_edge_labels = {z: str(self._underlying_graph.edges[z]["weight"])
+                           for z in list(self._underlying_graph.edges())}
+        nx.draw(
+            self._underlying_graph,pos=all_positions,with_labels=False)
+        nx.draw_networkx_edge_labels(
+            self._underlying_graph,
+            pos=all_positions,
+            edge_labels=all_edge_labels)
+        if show_as_well:
+            plt.axis('off')
+            plt.show()
 
     def totally_nonnegative(self, nonnegative_wt: Callable[[NT], bool]) -> bool:
         """
