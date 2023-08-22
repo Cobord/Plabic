@@ -9,3 +9,4 @@ from .le_diagram import LeDiagram
 from .double_wiring import WiringDiagram
 from .triangulation import Triangulation
 from .ba_permutation import AffinePermutation, BoundedAffinePermutation, ShiftEquivariantZBijection
+from .cluster import Cluster,cluster_same

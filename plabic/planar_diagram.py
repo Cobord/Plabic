@@ -4,7 +4,7 @@ diagrams used in the sense of cluster algebra
 
 from enum import Enum, auto
 from typing import Iterator, List, Set, Tuple, TypeVar, Union, Callable, Optional
-from typing import runtime_checkable, Protocol, Any
+from typing import runtime_checkable, Protocol, Any, cast
 import itertools
 from functools import reduce
 import networkx as nx
@@ -155,7 +155,7 @@ class PlanarNetwork:
         # so that (i,j) in collection means that particular i in i_set connects to j in j_set
         if len(i_set) == 0 or len(j_set) == 0:
             raise ValueError("The sets of sources and sinks must be nonempty")
-        relevant_pairings = [pairings_nc(i_set, j_set)]
+        relevant_pairings = cast(List[Set[Tuple[Nat,Nat]]],[pairings_nc(i_set, j_set)])
         # relevant_pairings = pairings(i_set,j_set)
         for collection in relevant_pairings:
             path_collection_iterator = None
