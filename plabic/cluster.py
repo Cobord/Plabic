@@ -163,6 +163,8 @@ class Cluster(Generic[NT]):
     def __eq__(self,other) -> bool:
         if not isinstance(other,Cluster):
             return False
+        if list(self.my_quiver.nodes()) != list(other.my_quiver.nodes()):
+            return False
         if not cluster_same(self.cluster,other.cluster):
             return False
         return self.my_antisymmetric() == other.my_antisymmetric()
