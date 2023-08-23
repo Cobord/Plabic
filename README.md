@@ -215,13 +215,17 @@ assert p.totally_nonnegative(lambda letter : is_nonnegative_variable(letter))
 assert p.positive(lambda letter : is_positive_variable(letter))
 ```
 
-Consider the example in https://arxiv.org/pdf/math/9912128.pdf figure 1. We can see there are 3 horizontal lines as the first input states. The second input is the edge_list which describes the edges as read left to right in the figure along with variables A-I for their weights, and some being labelled with weight ONE. We can specify the multiplicative and additive identity. They default to 1.0 and 0.0 but if we want to work symbolically or with other number systems this provides the capability to do so.
+Consider the example in https://arxiv.org/pdf/math/9912128.pdf figure 1. We can see there are 3 horizontal lines as the first input states. The second input is the edge_list which describes the edges as read left to right in the figure along with variables A-I for their weights, and some being labelled with weight ONE. We can specify the multiplicative and additive identity. They default to 1.0 and 0.0 but if we want to work symbolically or with other number systems this provides the capability to do so. The weights simply need to implement the protocol of being able to be added and multiplied.
+
+Alternatively instead of specifying edge_list one can also give a chip_word and chip_weights. The former is a list of tuples with the first part being ChipType.UP,DOWN,FLAT and the second part being a natural number to indicates for which pair of neighboring wires this "chip" is relevant. The latter is a list of the same length with the weights on the respective chips. In this construction, the diagram is more spaced out even if multiple chips can be placed next to each other vertically.
 
 We can then determine the ij entry of the weight matrix which is given by a sum of products expression in the edge weights for paths connecting i on one side of the diagram to j on the other.
 
 Lindstrom Minor uses the Lindstrom lemma to compute the specified minor of the weight matrix via a similar sum of products formula with systems of paths connecting the vertices in one set on the left side to vertices in the other set on the right side.
 
 The 2 totally_nonnegative/positive query methods take the diagram and a function which says whether or not a given edge weight is nonnegative/positive and deduces whether the weight matrix also is totally nonnegative/totally positive. This is when we have defined A-I via sympy to be unspecified variables that we will later interpret to only take nonnegative/positive values.
+
+When calling the draw method a figure is produced with the diagram. The edges are labelled with their weights (except if the weight is the multiplicative identity which is treated as default and doesn't need to be explicitly shown).
 
 # (Bounded) Affine Permutations
 
@@ -241,3 +245,30 @@ There are several generators which yield all sorts of (bounded) affine permutati
 - Everything in the affine symmetric group up to a given Coxeter length
 - Iterating through Q_{k,N} by lengths of the two factors (which form endpoints of a Bruhat interval)
 - Shifts of such Bruhat intervals using the other generators
+
+# Cluster
+
+```
+from plabic import Cluster,cluster_same
+A,B,C = symbols("a,b,c",commutative=True)
+my_a3_quiver = nx.MultiDiGraph()
+my_a3_quiver.add_node("1")
+my_a3_quiver.add_node("2")
+my_a3_quiver.add_node("3")
+my_a3_quiver.add_edge("1","2")
+my_a3_quiver.add_edge("2","3")
+c = Cluster[Expr](my_a3_quiver,[A,B,C],multiplicative_identity=Integer(1),simplifier=lambda z: z.simplify())
+c.mutate("1")
+assert cluster_same(c.cluster,{"1":(B+1)/A,"2":B,"3":C})
+c.draw()
+```
+
+Create a cluster by specifying a quiver and expressions associated to each vertex. One also specifies a multiplicative identity which has the same generic type (Here all the variables and multiplicative identity are Expr from sympy).
+We also pass a simplifier so that when mutations happen the repeated divisions are simplified so that we get back to a nice rational expression.
+
+In order to mutate specify the name of the vertex you wish to mutate at. The object changes my_quiver and cluster variables (simply called cluster) appropriately. The cluster variables are given as a dictionary
+so we can easily pick out the one corresponding to each vertex of the quiver.
+
+cluster_same compares the two clusters and can also be given an additional function which can do more simplification. This will be needed only if the simplifier in the Cluster initialization was too weak. 
+
+The draw method simply draws the underlying quiver.
