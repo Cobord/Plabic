@@ -297,9 +297,17 @@ if __name__ == '__main__':
                        for which in range(N)], [(x-1,y-1) for x,y in my_diagonals])
     p = t.to_plabic()
     p.draw()
+    for tri_num in range(6):
+        cur_triangle_name = f"triangle{tri_num}"
+        assert p.my_kn_type(cur_triangle_name) == (1,8)
+    for int_num,exp_contrib in enumerate([2,5,2,5,2,3,4,3]):
+        cur_int_name = f"int{int_num}"
+        assert p.my_kn_type(cur_int_name) == (2-exp_contrib,8)
+    assert p.my_kn_type() == (2,8),f"{p.my_kn_type()}"
     change, new_diag = t.quad_flip((1,3))
     print(f"Triangles are : {t.my_triangles}")
     p = t.to_plabic()
+    assert p.my_kn_type() == (2,8),f"{p.my_kn_type()}"
     print(f"Perfect matching : {p.my_perfect_matching}")
     p.draw()
 

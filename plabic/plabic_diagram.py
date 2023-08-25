@@ -6,7 +6,7 @@ PLAnar BIColored
 from __future__ import annotations
 from enum import Enum, auto
 import numbers
-from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set
+from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set, Iterator
 import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -420,18 +420,12 @@ class PlabicGraph:
         self.remove_prop("my_perfect_edge")
         self.my_perfect_matching = None
 
-    def __my_perfect_matching_fix(self, any_self_loops: bool):
+    def __my_perfect_matching_fix(self, _any_self_loops: bool):
         """
         makes sure the numbers giving my_perfect_edge
         on each vertex induce a perfect matching
         possibly after ignoring some of the boundary vertices
         """
-        if any_self_loops:
-            self.__clear_perfect_matching()
-            return
-        if not self.is_bipartite():
-            self.__clear_perfect_matching()
-            return
         all_node_names = list(self.my_graph.nodes())
         try:
             special_edge_numbers = {
@@ -447,7 +441,12 @@ class PlabicGraph:
                     raise ValueError(
                         f"Should not have seen {src_name} as a source yet")
                 already_partnered[src_name] = tgt_name
-                if already_partnered.get(tgt_name, src_name) != src_name:
+                if self.opposite_colors(src_name,tgt_name) and \
+                    already_partnered.get(tgt_name, src_name) != src_name:
+                    self.__clear_perfect_matching()
+                    return
+                if self.same_colors(src_name,tgt_name) and \
+                    already_partnered.get(tgt_name, src_name) == src_name:
                     self.__clear_perfect_matching()
                     return
                 self.my_perfect_matching.add((src_name, tgt_name, edge_key))
@@ -456,6 +455,56 @@ class PlabicGraph:
                     self.my_graph.nodes[src_name]["is_interior"]:
                 self.__clear_perfect_matching()
                 break
+
+    def __repair_perfect_matching(self, which_vertices : List[str]) :
+        """
+        removes the my_perfect_edge from all in which_vertices
+        then use the remaining constraint satisfaction problem
+        to get new values (now that colors and edges have changed)
+        then puts those back in as the new my_perfect_edge
+        if no solutions are found, then all perfect matchings are cleared
+        """
+        if "my_perfect_edge" not in self.my_extra_props:
+            self.__clear_perfect_matching()
+            return
+        which_vertices_2 = (z for z in which_vertices if z in self.my_graph.nodes)
+        for cur_node in which_vertices_2:
+            try:
+                del self.my_graph.nodes[cur_node]["my_perfect_edge"]
+            except KeyError:
+                pass
+        try:
+            put_back_iter = self.__remaining_my_perfect_edges()
+            put_back = next(put_back_iter)
+            found_put_back = True
+        except StopIteration:
+            found_put_back = False
+        except NotImplementedError:
+            found_put_back = False
+        if found_put_back:
+            if set(put_back.keys()) != set(which_vertices):
+                self.__clear_perfect_matching()
+            else:
+                for cur_node in which_vertices :
+                    self.__add_props(cur_node,{"my_perfect_edge":put_back[cur_node]})
+                self.__my_perfect_matching_fix(False)
+        else:
+            self.__clear_perfect_matching()
+
+    def __remaining_my_perfect_edges(self) -> Iterator[Dict[str,int]]:
+        """
+        make the constraint problem for my_perfect_edge
+        - each vertex has an integer variable between [0,degree)
+        - if an edge connects two opposite colors, then
+            r_v==a -> r_w==corresponding(a)
+        - if an edge connects two same colors, then
+            r_v==a -> r_w!=corresponding(a)
+        - for each vertex with a my_perfect_edge prop, that variable
+            is pinned down
+        """
+        for _ in range(0):
+            yield {}
+        raise NotImplementedError
 
     def __multi_edge_permutation_add(self, src: str, tgt: str,
                                      src_to_tgt_dict: Optional[Dict[int, int]],
@@ -605,6 +654,16 @@ class PlabicGraph:
             return False
         return this_color != that_color
 
+    def same_colors(self, this_vertex: str, that_vertex: str) -> bool:
+        """
+        are this_vertex and that_vertex both colored and the same
+        """
+        this_color = self.get_color(this_vertex)
+        that_color = self.get_color(that_vertex)
+        if this_color is None or that_color is None:
+            return False
+        return this_color == that_color
+
     def _by_edge_number(self, src: str, desired_edge_number: int) -> Tuple[str, int]:
         """
         the target of the half-edge starting at src
@@ -619,6 +678,37 @@ class PlabicGraph:
         raise ValueError(
             f"Nothing with edge number {desired_edge_number} out of {src} found")
 
+    def my_kn_type(self, this_contribution : Optional[str]=None) -> Tuple[int,int]:
+        """
+        bdry_sinks - bdry_sources + 
+            sum_{v in red vertices} (deg(v)-2)
+            - sum_{v in green vertices} (deg(v)-2) = 0
+        bdry_sinks - bdry_sources = - my_sum
+        bdry_sinks + bdry_sources = my_n
+        """
+        def vertex_contribution(which_vertex : str) -> int:
+            """
+            contribution of which_vertex to the sum
+            """
+            cur_color = self.get_color(which_vertex)
+            if cur_color is not None:
+                cur_degree = cast(int,self.my_graph.out_degree(which_vertex))
+                if cur_color == BiColor.RED:
+                    my_sum = cur_degree-2
+                else:
+                    my_sum = -(cur_degree-2)
+            else:
+                my_sum = 0
+            return my_sum
+        my_n = len(self.all_bdry_nodes)
+        if this_contribution is not None:
+            return (vertex_contribution(this_contribution),my_n)
+        my_sum = 0
+        for vertex_name in self.my_graph.nodes():
+            my_sum += vertex_contribution(vertex_name)
+        my_sinks = (my_n - my_sum) // 2
+        return (my_n-my_sinks,my_n)
+
     def greedy_shrink(self,
                       name_combiner : Optional[Callable[[str,str],str]] = None,
                       rounds_left : int = 5) -> bool:
@@ -628,7 +718,7 @@ class PlabicGraph:
         the name_combiner tells what to do with names on the
         contract edge moves
         """
-        if rounds_left>=5 and not self.my_extra_props.issubset([]):
+        if not self.my_extra_props.issubset([]):
             return False
         name_combiner = name_combiner if name_combiner is not None else lambda z1,_: z1
         any_change = False
@@ -685,10 +775,7 @@ class PlabicGraph:
             else:
                 self.my_graph.nodes()[cur_node]["color"] = BiColor.RED
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching(list(four_nodes))
 
         return True, "Success"
 
@@ -769,6 +856,9 @@ class PlabicGraph:
                     del self.multi_edge_permutation[(node_to_go, adj)]
                 if self.multi_edge_permutation.get((adj, node_to_go), None) is not None:
                     del self.multi_edge_permutation[(adj, node_to_go)]
+        if extra_data_transformer is None and \
+            self.my_extra_props.issubset(["my_perfect_edge","position"]):
+            pass # extra_data_transformer = __flip_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -813,10 +903,7 @@ class PlabicGraph:
                 {0: halfedge_number_from_b,
                  1: halfedge_number_from_d}, None, 2)
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching([this_vertex,that_vertex])
 
         return True, "Success"
 
@@ -867,10 +954,7 @@ class PlabicGraph:
             old_dict_21[idx_from_side_2] = idx_from_side_1
             self.multi_edge_permutation[(side_2, side_1)] = old_dict_21
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching([side_1,side_2])
 
         return True, "Success"
 
@@ -898,6 +982,9 @@ class PlabicGraph:
         key_that_this = self.__corresponding_multiedge_idx(
             this_vertex, that_vertex, key_this_that)
 
+        if extra_data_transformer is None and \
+            self.my_extra_props.issubset(["my_perfect_edge","position"]):
+            pass # extra_data_transformer = __insert_bivalent_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -913,10 +1000,7 @@ class PlabicGraph:
         self.my_graph.add_edge(that_vertex, desired_name, key_that_this)
         self.my_graph.add_edge(desired_name, that_vertex, 1)
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching([this_vertex,that_vertex,desired_name])
 
         return True, "Success"
 
@@ -985,6 +1069,9 @@ class PlabicGraph:
                     del self.multi_edge_permutation[(node_to_go, adj)]
                 if self.multi_edge_permutation.get((adj, node_to_go), None) is not None:
                     del self.multi_edge_permutation[(adj, node_to_go)]
+        if extra_data_transformer is None and \
+            self.my_extra_props.issubset(["my_perfect_edge","position"]):
+            pass # extra_data_transformer = __contract_edge_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -1012,10 +1099,7 @@ class PlabicGraph:
                     self.multi_edge_permutation[(combined_name, tgt)][key_from_combined] =\
                         half_edge_from_tgt
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching([combined_name])
 
         return True, "Success"
 
@@ -1083,6 +1167,9 @@ class PlabicGraph:
                 del self.multi_edge_permutation[(this_vertex, adj)]
             if self.multi_edge_permutation.get((adj, this_vertex), None) is not None:
                 del self.multi_edge_permutation[(adj, this_vertex)]
+        if extra_data_transformer is None and \
+            self.my_extra_props.issubset(["my_perfect_edge","position"]):
+            pass # extra_data_transformer = __split_vertex_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             new_props_1, new_props_2 = extra_data_transformer(
@@ -1117,10 +1204,7 @@ class PlabicGraph:
                 self.multi_edge_permutation[(
                     split_name_2, tgt)][on_2_key] = on_tgt_key
 
-        # clears everything to do with perfect orientation
-        # could fix the perfect orientation instead
-        # along this move
-        self.__clear_perfect_matching()
+        self.__repair_perfect_matching([split_name_1,split_name_2])
 
         return True, "Success"
 
@@ -1406,6 +1490,8 @@ class PlabicGraph:
 
         draw_oriented_if_perfect - if the Plabic graph is equipped with a perfect
             orientation, draw the edges as arrows instead of line segments
+            if the graph is not bipartite, then drawing as line segments does not work
+            so perfect orientations will be drawn with arrows regardless of this input
         show_node_names - show the names of the vertices
         red_nodes,green_nodes,bdry_nodes - the colors of the vertices
             (adjust for black and white printing or red green colorblindness)
@@ -1450,7 +1536,7 @@ class PlabicGraph:
                 edge_is_special: List[Tuple[str, str, bool]] = \
                     [(u, v, k == special_edge_numbers[u])
                     for u, v, k in self.my_graph.edges(keys=True)]
-                if draw_oriented_if_perfect:
+                if draw_oriented_if_perfect or not self.is_bipartite():
                     draw_arrowheads = True
 
                     def keep_this_arrow(src_name: str, tgt_name: str, is_special: bool) -> bool:
@@ -1491,3 +1577,34 @@ class PlabicGraph:
         plt.draw()
         if show_as_well:
             plt.show()
+
+def __flip_position_transformer(_d1 : ExtraData,
+                                _d2 : ExtraData,
+                                _p : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
+    """
+    the default extra data transformer for flip move
+    """
+    raise NotImplementedError("__flip_position_transformer")
+
+def __insert_bivalent_position_transformer(_d1 : ExtraData,
+                                           _d2 : ExtraData,
+                                           _p : PlabicGraph) -> ExtraData:
+    """
+    the default extra data transformer for insert bivalent move
+    """
+    raise NotImplementedError("__insert_bivalent_position_transformer")
+
+def __contract_edge_position_transformer(_d1 : ExtraData,
+                                         _d2 : ExtraData,
+                                         _p : PlabicGraph) -> ExtraData:
+    """
+    the default extra data transformer for contract edge move
+    """
+    raise NotImplementedError("__contract_edge_position_transformer")
+
+def __split_vertex_position_transformer(_d1 : ExtraData,
+                                        _p : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
+    """
+    the default extra data transformer for split vertex move
+    """
+    raise NotImplementedError("__split_vertex_position_transformer")
