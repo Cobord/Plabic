@@ -19,10 +19,17 @@ def test_octagon() -> None:
         assert diag[0]==quad[0]
         assert diag[1]==quad[2]
     p = t.to_plabic()
+    scale_factor = 2
+    assert p.circles_config is not None
+    assert len(p.circles_config.internal_circles)==0
+    center, radius, _ = p.circles_config.outer_circle
+    assert center[0]**2+center[1]**2 <= 1e-6
+    assert radius == RADIUS*scale_factor
     assert p.my_extra_props == set(["position","my_perfect_edge"])
     assert p.my_perfect_matching is not None
     did_scale_up = p.coordinate_transform(lambda z: (z[0]*1.10,z[1]*1.1))
     assert did_scale_up
+    assert p.circles_config is None
     change, new_diag = t.quad_flip((1,3))
     assert change
     assert new_diag == (2,6)
@@ -35,10 +42,18 @@ def test_octagon() -> None:
         assert diag[0]==quad[0]
         assert diag[1]==quad[2]
     p = t.to_plabic()
+    scale_factor = 2
+    assert p.circles_config is not None
+    assert len(p.circles_config.internal_circles)==0
+    center, radius, _ = p.circles_config.outer_circle
+    assert center[0]**2+center[1]**2 <= 1e-6
+    assert radius == RADIUS*scale_factor
     assert p.my_extra_props == set(["position","my_perfect_edge"])
     assert p.my_perfect_matching is not None
     did_scale_up = p.coordinate_transform(lambda z: (z[0]*1.3,z[1]*2.4))
     assert did_scale_up
+    scale_factor = 2
+    assert p.circles_config is None
 
 def test_pentagon() -> None:
     """
@@ -54,10 +69,17 @@ def test_pentagon() -> None:
         assert diag[0]==quad[0]
         assert diag[1]==quad[2]
     p = t.to_plabic()
+    scale_factor = 2
+    assert p.circles_config is not None
+    assert len(p.circles_config.internal_circles)==0
+    center, radius, _ = p.circles_config.outer_circle
+    assert center[0]**2+center[1]**2 <= 1e-6
+    assert radius == RADIUS*scale_factor
     assert p.my_extra_props == set(["position","my_perfect_edge"])
     assert p.my_perfect_matching is not None
     did_scale_up = p.coordinate_transform(lambda z: (z[0]*1.50,z[1]*1.1))
     assert did_scale_up
+    assert p.circles_config is None
     change, new_diag = t.quad_flip((0,2))
     assert change
     assert new_diag == (1,3)
@@ -70,7 +92,14 @@ def test_pentagon() -> None:
         assert diag[0]==quad[0]
         assert diag[1]==quad[2]
     p = t.to_plabic()
+    scale_factor = 2
+    assert p.circles_config is not None
+    assert len(p.circles_config.internal_circles)==0
+    center, radius, _ = p.circles_config.outer_circle
+    assert center[0]**2+center[1]**2 <= 1e-6
+    assert radius == RADIUS*scale_factor
     assert p.my_extra_props == set(["position","my_perfect_edge"])
     assert p.my_perfect_matching is not None
     did_scale_up = p.coordinate_transform(lambda z: (z[0]*1.3,z[1]*2.4))
     assert did_scale_up
+    assert p.circles_config is None

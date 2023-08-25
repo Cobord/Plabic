@@ -371,8 +371,7 @@ class PlabicGraph:
         self.circles_config = None
         if my_circles_config is not None:
             self.circles_config = my_circles_config
-            # raise NotImplementedError(
-            #    "are all the boundary vertices on the circles they are supposed to be")
+            # trusts that all the boundary vertices on the circles they are supposed to be
 
     def __add_props(self, vertex: str, props: ExtraData):
         """
@@ -1586,21 +1585,27 @@ def __flip_position_transformer(_d1 : ExtraData,
     """
     raise NotImplementedError("__flip_position_transformer")
 
-def __insert_bivalent_position_transformer(_d1 : ExtraData,
-                                           _d2 : ExtraData,
+def __insert_bivalent_position_transformer(data_1 : ExtraData,
+                                           data_2 : ExtraData,
                                            _p : PlabicGraph) -> ExtraData:
     """
     the default extra data transformer for insert bivalent move
     """
-    raise NotImplementedError("__insert_bivalent_position_transformer")
+    d1_pos = data_1["position"]
+    d2_pos = data_2["position"]
+    halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
+    return {"position":halfway_btw}
 
-def __contract_edge_position_transformer(_d1 : ExtraData,
-                                         _d2 : ExtraData,
+def __contract_edge_position_transformer(data_1 : ExtraData,
+                                         data_2 : ExtraData,
                                          _p : PlabicGraph) -> ExtraData:
     """
     the default extra data transformer for contract edge move
     """
-    raise NotImplementedError("__contract_edge_position_transformer")
+    d1_pos = data_1["position"]
+    d2_pos = data_2["position"]
+    halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
+    return {"position":halfway_btw}
 
 def __split_vertex_position_transformer(_d1 : ExtraData,
                                         _p : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
