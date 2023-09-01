@@ -6,6 +6,7 @@ PLAnar BIColored
 from __future__ import annotations
 from enum import Enum, auto
 import numbers
+from math import sqrt
 from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set, Iterator
 import itertools
 import networkx as nx
@@ -1260,6 +1261,43 @@ class PlabicGraph:
             return False,lambda z: z
         raise NotImplementedError
 
+    def radius_unoccupied(self, center : Point, ignored_vertices : List[str]) -> Tuple[bool,float]:
+        """
+        the ball of the returned radius around center
+        is only allowed to have ignored_vertices within it
+        """
+        def point_like(maybe_point) -> bool:
+            """
+            is p in R^2
+            """
+            return isinstance(maybe_point,tuple) and len(maybe_point)==2 and\
+                isinstance(maybe_point[0],numbers.Real) and isinstance(maybe_point[1],numbers.Real)
+        all_are_points = True
+        for node_name in self.my_graph.nodes():
+            old_position = self.my_graph.nodes[node_name].get("position",None)
+            if not point_like(old_position):
+                all_are_points = False
+                break
+        if not all_are_points:
+            return False,0.0
+        min_radius_sq : Optional[float] = None
+        for node_name in self.my_graph.nodes():
+            if node_name in ignored_vertices:
+                continue
+            cur_position = cast(Point,self.my_graph.nodes[node_name]["position"])
+            cur_radius_sq = (cur_position[0]-center[0])**2 + (cur_position[1]-center[1])**2
+            if min_radius_sq is None or cur_radius_sq<min_radius_sq:
+                min_radius_sq = cur_radius_sq
+        if min_radius_sq is None:
+            if self.circles_config is None:
+                return False, 1.0
+            (disk_center, disk_radius, _) = self.circles_config.outer_circle
+            center_to_disk_center = (disk_center[0]-center[0])**2 + (disk_center[1]-center[1])**2
+            if center_to_disk_center<disk_radius**2:
+                return True, disk_radius-sqrt(center_to_disk_center)
+            return False, 0.0
+        return True,sqrt(min_radius_sq)
+
     def coordinate_transform(self,transform : Callable[[Point],Point],
                              circle_config_invalidates : bool = True) -> bool:
         """
@@ -1577,17 +1615,27 @@ class PlabicGraph:
         if show_as_well:
             plt.show()
 
-def __flip_position_transformer(_d1 : ExtraData,
-                                _d2 : ExtraData,
-                                _p : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
+def __flip_position_transformer(data_1 : ExtraData,
+                                data_2 : ExtraData,
+                                surrounding_plabic : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
     """
     the default extra data transformer for flip move
     """
+    d1_pos : Point = data_1["position"]
+    d2_pos : Point = data_2["position"]
+    halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
+    #pylint:disable=pointless-string-statement
+    """make the segment perpendicular to the line d1-d2
+    passing through the midpoint
+    the new positions are the endpoints of that segment
+    use the rest of the positions in _p to determine how long the segment is
+    the same length as the original segment unless there are other points in the way"""
+    _found_rad, _rad = surrounding_plabic.radius_unoccupied(halfway_btw, [])
     raise NotImplementedError("__flip_position_transformer")
 
 def __insert_bivalent_position_transformer(data_1 : ExtraData,
                                            data_2 : ExtraData,
-                                           _p : PlabicGraph) -> ExtraData:
+                                           _surrounding_plabic : PlabicGraph) -> ExtraData:
     """
     the default extra data transformer for insert bivalent move
     """
@@ -1598,7 +1646,7 @@ def __insert_bivalent_position_transformer(data_1 : ExtraData,
 
 def __contract_edge_position_transformer(data_1 : ExtraData,
                                          data_2 : ExtraData,
-                                         _p : PlabicGraph) -> ExtraData:
+                                         _surrounding_plabic : PlabicGraph) -> ExtraData:
     """
     the default extra data transformer for contract edge move
     """
@@ -1607,9 +1655,14 @@ def __contract_edge_position_transformer(data_1 : ExtraData,
     halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
     return {"position":halfway_btw}
 
-def __split_vertex_position_transformer(_d1 : ExtraData,
-                                        _p : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
+def __split_vertex_position_transformer(data_1 : ExtraData,
+                                        surrounding_plabic : PlabicGraph)\
+                                            -> Tuple[ExtraData, ExtraData]:
     """
     the default extra data transformer for split vertex move
     """
+    # find the radius around d1_pos that is not occupied by any other vertices
+    # the 2 vertices will need to be somewhere within that ball
+    d1_pos = data_1["position"]
+    _found_rad, _rad = surrounding_plabic.radius_unoccupied(d1_pos, [])
     raise NotImplementedError("__split_vertex_position_transformer")
