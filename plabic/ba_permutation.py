@@ -343,6 +343,7 @@ class AffinePermutation:
     """
     An affine permutation with some periodicity n
     """
+    my_underlying : ShiftEquivariantZBijection
     is_bounded : bool
     my_coxeter_word : Optional[List[int]]
     my_n : int
@@ -374,6 +375,13 @@ class AffinePermutation:
         my_invariant = sum(self[idx]-idx for idx in range(1,self.my_n+1))
         assert my_invariant==0, \
             f"The sum of f(i)-i as i goes from 1 through {self.my_n} should be 0"
+
+    @staticmethod
+    def identity(my_n : int) -> AffinePermutation:
+        """
+        the identity affine permutation with shift equivariance n
+        """
+        return AffinePermutation(coxeter_word=[],n_val=my_n)
 
     def inv(self) -> AffinePermutation:
         """
@@ -484,10 +492,62 @@ class AffinePermutation:
     def __getitem__(self, idx: int) -> int:
         return self.my_underlying[idx]
 
+    def ij_jumpers(self : AffinePermutation, i: int, j: int) -> Set[int]:
+        """
+        the integers <=i which get sent to something >=j by self
+        """
+        all_jumpers : List[int] = []
+        cur_batch_stop = i
+        while True:
+            cur_batch = range(cur_batch_stop-self.my_n+1,cur_batch_stop+1)
+            cur_jumpers = [z for z in cur_batch if self[z]>=j]
+            all_jumpers.extend(cur_jumpers)
+            if len(cur_jumpers) == 0:
+                break
+            cur_batch_stop -= self.my_n
+        return set(all_jumpers)
+
+    @staticmethod
+    def __is_sublist(list_a : List[int], list_b : List[int]) -> bool:
+        """
+        is list_a a sublist of list_b
+        """
+        start_looking_in_b = 0
+        for a_letter in list_a:
+            try:
+                where_in_b = list_b.index(a_letter, start_looking_in_b)
+            except ValueError:
+                return False
+            start_looking_in_b = where_in_b + 1
+        return True
+
     def bruhat_leq(self,other:AffinePermutation) -> bool:
         """
         self <= other in the Bruhat partial order
         """
+
+        if self.my_n != other.my_n:
+            return False
+        reduced_self = self.to_reduced_word()
+        reduced_other = other.to_reduced_word()
+        if len(reduced_self)>len(reduced_other):
+            return False
+        if len(reduced_self)==len(reduced_other):
+            return self==other
+        if self.__is_sublist(reduced_self, reduced_other):
+            return True
+        # not manifestly a subword
+        # could still be leq because we might be using reduced words
+        # which do not make it obvious
+
+        # check the condition on ij jumping self[i,j]<=other[i,j] for all i,j
+        # on some pairs i,j
+        for try_i,try_j in itertools.permutations(range(-2*self.my_n,2*self.my_n+1),2):
+            if len(self.ij_jumpers(try_i,try_j))>len(other.ij_jumpers(try_i,try_j)):
+                return False
+        # couldn't prove not leq with the limited set of ij pairs we tried
+        # we need to work harder
+
         raise NotImplementedError
 
     def quot_to_sn(self) -> List[int]:
@@ -520,6 +580,41 @@ class AffinePermutation:
         return [potential for potential
                 in range(0,self.my_n)
                 if self[potential]>self[potential+1]]
+
+    def to_reduced_word(self) -> List[int]:
+        """
+        reduced coxeter word
+        """
+        if self.my_coxeter_word is not None and len(self.my_coxeter_word)<=len(self):
+            return self.my_coxeter_word.copy()
+
+        def pick_commuting_sublist(available_letters : List[int]) -> List[int]:
+            """
+            picks a commuting subset of the available coxeter letters
+            """
+            if len(available_letters)==0:
+                return []
+            available_letters.sort()
+            commuting_letters = [available_letters[0]]
+            last_added = available_letters[0]
+            for letter in available_letters[1:]:
+                if (letter - last_added) != 1 and (letter-last_added) != self.my_n - 1:
+                    commuting_letters.append(letter)
+            return commuting_letters
+
+        my_identity = AffinePermutation.identity(self.my_n)
+        to_return_word = []
+        temp_self = cast(AffinePermutation,deepcopy(self))
+        while temp_self != my_identity:
+            available_descents = temp_self.right_descents()
+            commuting_subset = pick_commuting_sublist(available_descents)
+            commuting_subset_word = AffinePermutation(coxeter_word=commuting_subset,n_val=self.my_n)
+            to_return_word.extend(commuting_subset)
+            temp_self = temp_self*commuting_subset_word
+        to_return_word.reverse()
+        if self.my_coxeter_word is None or len(self.my_coxeter_word)>len(to_return_word):
+            self.my_coxeter_word = to_return_word
+        return to_return_word
 
     def is_k_grassmannian(self) -> Tuple[bool,int]:
         """

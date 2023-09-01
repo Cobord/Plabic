@@ -2,6 +2,7 @@
 test for (bounded) affine permutations
 """
 import itertools
+import random
 from math import factorial
 from plabic import AffinePermutation, BoundedAffinePermutation
 
@@ -13,6 +14,7 @@ def test_coxeter_muls():
     cox_gens = {}
     for idx in range(trial_n):
         s_idx = AffinePermutation(n_val=trial_n,coxeter_word=[idx])
+        assert s_idx.to_reduced_word() == [idx]
         if idx==0:
             assert all(s_idx[jdx]==jdx for jdx in range(2,trial_n))
             assert s_idx[1]==0
@@ -27,15 +29,36 @@ def test_coxeter_muls():
         s_jdx = cox_gens[jdx]
         combined_obs = AffinePermutation(n_val=trial_n,coxeter_word=[idx,jdx])
         combined_exp = s_idx*s_jdx
+        assert combined_exp.to_reduced_word() == [idx,jdx]
         assert combined_exp.my_coxeter_word == [idx,jdx]
         assert combined_obs.my_coxeter_word == [idx,jdx]
         assert combined_exp == combined_obs
+    for (idx,jdx) in itertools.permutations(range(trial_n),2):
+        s_idx = cox_gens[idx]
+        s_jdx = cox_gens[jdx]
+        if trial_n-1>abs(idx-jdx)>1:
+            combined_exp = AffinePermutation(n_val=trial_n,coxeter_word=[jdx])
+            expected_reduced_word_exp = [jdx]
+            shrinks = True
+        else:
+            combined_exp = AffinePermutation(n_val=trial_n,coxeter_word=[jdx,idx,jdx])
+            expected_reduced_word_exp = [jdx,idx,jdx]
+            shrinks = False
+        combined_obs = s_idx*s_jdx*s_idx
+        assert combined_obs.my_coxeter_word == [idx,jdx,idx]
+        assert combined_exp.my_coxeter_word == expected_reduced_word_exp
+        assert combined_exp == combined_obs
+        if shrinks:
+            assert combined_obs.my_coxeter_word == combined_exp.my_coxeter_word
+        else:
+            assert combined_obs.my_coxeter_word == [idx,jdx,idx]
     for (idx,jdx,kdx) in itertools.permutations(range(trial_n),3):
         s_idx = cox_gens[idx]
         s_jdx = cox_gens[jdx]
         s_kdx = cox_gens[kdx]
         combined_obs = AffinePermutation(n_val=trial_n,coxeter_word=[idx,jdx,kdx])
         combined_exp = s_idx*s_jdx*s_kdx
+        assert combined_exp.to_reduced_word() == [idx,jdx,kdx]
         assert combined_exp.my_coxeter_word == [idx,jdx,kdx]
         assert combined_obs.my_coxeter_word == [idx,jdx,kdx]
         assert combined_exp == combined_obs
@@ -188,3 +211,35 @@ def test_all_parabolic_perms():
         expected_count = \
             sum(sk_by_length[kdx]*s_nmk_by_length[my_len-kdx] for kdx in range(kdx_min,kdx_max+1))
         assert counts[my_len] == expected_count
+
+def test_reduced():
+    """
+    test that to_reduced_word produces an equivalent element
+    """
+    my_n = 9
+    trials_num = 30
+    word_lengths = [0,1,2,3,5,10]
+    for _ in range(trials_num):
+        random_word = random.choices(range(my_n), k = random.choice(word_lengths))
+        word_initial = AffinePermutation(coxeter_word=random_word,n_val=my_n)
+        assert word_initial.my_coxeter_word == random_word
+        reduced_random_word = word_initial.to_reduced_word()
+        word_reconstructed = AffinePermutation(coxeter_word=reduced_random_word,n_val=my_n)
+        assert len(reduced_random_word)<=len(random_word)
+        if len(reduced_random_word)<len(random_word):
+            assert word_initial.my_coxeter_word == reduced_random_word
+        else:
+            assert word_initial.my_coxeter_word == random_word
+        assert word_initial == word_reconstructed
+        assert word_reconstructed.my_coxeter_word == reduced_random_word
+        if len(reduced_random_word)<len(random_word):
+            assert word_initial.my_coxeter_word == reduced_random_word
+        else:
+            assert word_initial.my_coxeter_word == random_word
+
+def test_jumpers():
+    """
+    ij_jumpers which is a helper for the Bruhat order
+    """
+    test_perm = AffinePermutation(some_vals = {1:2,2:0,3:4}, n_val = 3)
+    assert test_perm.ij_jumpers(3,1) == {3,1,0}
