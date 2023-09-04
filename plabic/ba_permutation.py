@@ -521,7 +521,7 @@ class AffinePermutation:
             start_looking_in_b = where_in_b + 1
         return True
 
-    # pylint:disable=too-many-return-statements
+    # pylint:disable=too-many-return-statements,too-many-branches
     def bruhat_leq(self,other:AffinePermutation,
                    known_geq_self : Optional[Set[AffinePermutation]] = None,
                    known_leq_other : Optional[Set[AffinePermutation]] = None) -> bool:
@@ -793,6 +793,7 @@ class BruhatInterval:
             return False
         return other.v.bruhat_leq(self.v) and self.w.bruhat_leq(other.w)
 
+    #pylint:disable=too-many-locals
     @staticmethod
     def all_Qkn(my_k : int,
                 my_n : int,
