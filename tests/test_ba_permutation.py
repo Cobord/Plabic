@@ -4,7 +4,9 @@ test for (bounded) affine permutations
 import itertools
 import random
 from math import factorial
+from typing import Dict,Set
 from plabic import AffinePermutation, BoundedAffinePermutation
+from plabic.ba_permutation import BruhatInterval
 
 def test_coxeter_muls():
     """
@@ -243,3 +245,61 @@ def test_jumpers():
     """
     test_perm = AffinePermutation(some_vals = {1:2,2:0,3:4}, n_val = 3)
     assert test_perm.ij_jumpers(3,1) == {3,1,0}
+
+def test_qkn():
+    """
+    Q_kn
+    """
+    my_k = 2
+    my_n = 7
+    max_length = 5
+    for _cur_interval in BruhatInterval.all_Qkn(my_k,my_n,max_length):
+        pass
+
+def test_bruhat():
+    """
+    see if using the sets for bruhat_leq
+    """
+    perm_1 = AffinePermutation(some_vals = {1:1,2:2,3:3}, n_val = 3)
+    perm_2 = AffinePermutation(some_vals = {1:2,2:1,3:3}, n_val = 3)
+    perm_3 = AffinePermutation(some_vals = {1:2,2:0,3:4}, n_val = 3)
+    known_leq_dict : Dict[AffinePermutation,Set[AffinePermutation]] = {} #type:ignore
+    known_geq_dict : Dict[AffinePermutation,Set[AffinePermutation]] = {} #type:ignore
+    known_leq_dict[perm_1] = set()
+    known_leq_dict[perm_2] = set()
+    known_leq_dict[perm_3] = set()
+    known_geq_dict[perm_1] = set()
+    known_geq_dict[perm_2] = set()
+    known_geq_dict[perm_3] = set()
+    assert len(known_leq_dict[perm_2]) == 0
+    assert len(known_geq_dict[perm_1]) == 0
+    assert perm_1.bruhat_leq(perm_2,
+                             known_geq_dict.get(perm_1,None),
+                             known_leq_dict.get(perm_2,None))
+    assert len(known_leq_dict[perm_2]) == 1
+    assert len(known_geq_dict[perm_1]) == 1
+    assert perm_1 in known_leq_dict[perm_2]
+    assert perm_2 in known_geq_dict[perm_1]
+    assert perm_1.bruhat_leq(perm_2,
+                             known_geq_dict.get(perm_1,None),
+                             known_leq_dict.get(perm_2,None))
+    assert len(known_leq_dict[perm_2]) == 1
+    assert len(known_geq_dict[perm_1]) == 1
+    assert perm_1 in known_leq_dict[perm_2]
+    assert perm_2 in known_geq_dict[perm_1]
+    assert perm_2.bruhat_leq(perm_3,
+                             known_geq_dict.get(perm_2,None),
+                             known_leq_dict.get(perm_3,None))
+    assert len(known_leq_dict[perm_3]) == 1
+    assert len(known_geq_dict[perm_2]) == 1
+    assert perm_2 in known_leq_dict[perm_3]
+    assert perm_3 in known_geq_dict[perm_2]
+    assert perm_1.bruhat_leq(perm_3,
+                             known_geq_dict.get(perm_1,None),
+                             known_leq_dict.get(perm_3,None))
+    assert len(known_leq_dict[perm_3]) == 2
+    assert len(known_geq_dict[perm_1]) == 2
+    assert perm_1 in known_leq_dict[perm_3]
+    assert perm_2 in known_leq_dict[perm_3]
+    assert perm_3 in known_geq_dict[perm_1]
+    assert perm_2 in known_geq_dict[perm_1]

@@ -27,12 +27,12 @@ def test_Le1() -> None:
     my_diagram = [[0,1,0,1,0],[1,1,0,1],[0,0],[0,1]]
     my_Le = LeDiagram(my_diagram)
     assert my_Le.filling == my_diagram
-    print(my_Le.column_height(0) == 4)
-    print(my_Le.column_height(1) == 4)
-    print(my_Le.column_height(2) == 2)
-    print(my_Le.column_height(3) == 2)
-    print(my_Le.column_height(4) == 1)
-    print(my_Le.column_height(5) == 0)
+    assert my_Le.column_height(0) == 4
+    assert my_Le.column_height(1) == 4
+    assert my_Le.column_height(2) == 2
+    assert my_Le.column_height(3) == 2
+    assert my_Le.column_height(4) == 1
+    assert my_Le.column_height(5) is None
     p = my_Le.to_plabic()
     assert p.my_extra_props == set(["position"])
     assert p.my_perfect_matching is None
@@ -89,9 +89,7 @@ def test_from_Grassmann() -> None:
     """
     necklace_nums = [1247, 2347, 3478, 4678, 5678, 4678, 1478, 1478]
     necklace = [from_multidigit_int(z) for z in necklace_nums]
-    print(necklace)
     my_Le = LeDiagram.from_grassmann_necklace(necklace,4,8)
-    print(my_Le)
     exp_Le = LeDiagram([[1,0,0,1],[1,1,0,1],[0,0,1],[0]])
     assert my_Le.filling == exp_Le.filling
     p = my_Le.to_plabic()

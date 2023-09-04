@@ -521,30 +521,57 @@ class AffinePermutation:
             start_looking_in_b = where_in_b + 1
         return True
 
-    def bruhat_leq(self,other:AffinePermutation) -> bool:
+    # pylint:disable=too-many-return-statements
+    def bruhat_leq(self,other:AffinePermutation,
+                   known_geq_self : Optional[Set[AffinePermutation]] = None,
+                   known_leq_other : Optional[Set[AffinePermutation]] = None) -> bool:
         """
         self <= other in the Bruhat partial order
         """
 
         if self.my_n != other.my_n:
             return False
+        if known_geq_self is not None and other in known_geq_self:
+            return True
+        if known_leq_other is not None and self in known_leq_other:
+            return True
+        if known_leq_other is not None and known_geq_self is not None:
+            if not known_geq_self.isdisjoint(known_leq_other):
+                known_leq_other.add(self)
+                known_geq_self.add(other)
+                return True
         reduced_self = self.to_reduced_word()
         reduced_other = other.to_reduced_word()
         if len(reduced_self)>len(reduced_other):
             return False
         if len(reduced_self)==len(reduced_other):
-            return self==other
+            to_return = self==other
+            if to_return and known_leq_other is not None and known_geq_self is not None:
+                known_leq_other.add(self)
+                known_geq_self.add(other)
+            return to_return
         if self.__is_sublist(reduced_self, reduced_other):
+            if known_leq_other is not None and known_geq_self is not None:
+                known_leq_other.add(self)
+                known_geq_self.add(other)
             return True
         # not manifestly a subword
         # could still be leq because we might be using reduced words
         # which do not make it obvious
 
+        if len(reduced_self)+1==len(reduced_other):
+            pass
+
         # check the condition on ij jumping self[i,j]<=other[i,j] for all i,j
         # on some pairs i,j
-        for try_i,try_j in itertools.permutations(range(-2*self.my_n,2*self.my_n+1),2):
+        for try_i,try_j in itertools.permutations(range(1,self.my_n+1),2):
             if len(self.ij_jumpers(try_i,try_j))>len(other.ij_jumpers(try_i,try_j)):
                 return False
+        if self.is_lift_from_sn and other.is_lift_from_sn:
+            if known_leq_other is not None and known_geq_self is not None:
+                known_leq_other.add(self)
+                known_geq_self.add(other)
+            return True
         # couldn't prove not leq with the limited set of ij pairs we tried
         # we need to work harder
 
@@ -774,12 +801,35 @@ class BruhatInterval:
         Q_kn is defined as (v,w) in S_N times S_N^k
         satisfying v<=w and that S_N^k means that it is k-Grassmannian
         """
+        known_leq_dict : Dict[AffinePermutation,Set[AffinePermutation]] = {}
+        known_geq_dict : Dict[AffinePermutation,Set[AffinePermutation]] = {}
         if max_length is None:
             max_length = my_n*(my_n-1)//2
+        previous_ws : Set[AffinePermutation] = set()
+        len_previous_ws = -1
+        same_len_ws : Set[AffinePermutation] = set()
         for w_potential_len,w_potential in AffinePermutation.all_finite_perms(my_n,max_length):
+            if w_potential_len==len_previous_ws+2:
+                previous_ws, same_len_ws = same_len_ws, set()
+                len_previous_ws = len_previous_ws+1
+            same_len_ws.add(w_potential)
             is_k_grassmannian, which_k = w_potential.is_k_grassmannian()
             if not is_k_grassmannian or which_k != my_k:
                 continue
+            for prev_w in previous_ws:
+                if prev_w.bruhat_leq(w_potential):
+                    if w_potential not in known_leq_dict:
+                        known_leq_dict[w_potential] = set()
+                    known_leq_dict[w_potential].add(prev_w)
+                    if prev_w not in known_geq_dict:
+                        known_geq_dict[prev_w] = set()
+                    known_geq_dict[prev_w].add(w_potential)
             for _,v_potential in AffinePermutation.all_finite_perms(my_n,w_potential_len):
-                if v_potential.bruhat_leq(w_potential):
-                    yield BruhatInterval(v_potential,w_potential)
+                if v_potential not in known_geq_dict:
+                    known_geq_dict[v_potential] = set()
+                if w_potential not in known_leq_dict:
+                    known_leq_dict[w_potential] = set()
+                geq_v_set = known_geq_dict.get(v_potential,set())
+                leq_w_set = known_leq_dict.get(w_potential,set())
+                if v_potential.bruhat_leq(w_potential,geq_v_set,leq_w_set):
+                    yield BruhatInterval(deepcopy(v_potential),deepcopy(w_potential))
