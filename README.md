@@ -246,6 +246,8 @@ There are several generators which yield all sorts of (bounded) affine permutati
 - Iterating through Q_{k,N} by lengths of the two factors (which form endpoints of a Bruhat interval)
 - Shifts of such Bruhat intervals using the other generators
 
+The to_plabic method uses the BCFW bridge construction to construct a plabic graph from a bounded affine permutation.
+
 # Cluster
 
 ```

@@ -8,6 +8,8 @@ import itertools
 from math import gcd
 from typing import Dict, Iterator, List, Optional, Tuple, cast, Set
 
+from .plabic_diagram import BiColor, ExtraData, PlabicGraph, PlabicGraphBuilder
+
 #pylint:disable=invalid-name
 def lcm(a, b):
     """
@@ -234,6 +236,28 @@ class ShiftEquivariantZBijection:
             some_vals={z : self[other[z]] for z in range(1,final_n+1)},
             n_val=final_n)
 
+    def _swap_two(self,idx:int,jdx:int) -> None:
+        """
+        swap idx+m*self.my_n and jdx+m*self.my_n for all m in Z
+        """
+        assert idx % self.my_n != jdx % self.my_n
+        idx_pairs : List[Tuple[int,int]] = []
+        jdx_pairs : List[Tuple[int,int]] = []
+        for (key,value) in self.my_f.items():
+            if key % self.my_n == idx % self.my_n:
+                idx_pairs.append((key,value))
+            if key % self.my_n == jdx % self.my_n:
+                jdx_pairs.append((key,value))
+        for (idx_key,_) in idx_pairs:
+            del self.my_f[idx_key]
+        for (jdx_key,_) in jdx_pairs:
+            del self.my_f[jdx_key]
+        for (idx_key,idx_value) in idx_pairs:
+            self.my_f[idx_key+jdx-idx] = idx_value
+        for (jdx_key,jdx_value) in jdx_pairs:
+            self.my_f[jdx_key-jdx+idx] = jdx_value
+        self.is_lift_from_sn = all(1<=self[idx]<=self.my_n for idx in range(1,self.my_n+1))
+
     def quot_to_sn(self) -> List[int]:
         """
         Forget down to the residues modulo self.my_n
@@ -338,6 +362,113 @@ class BoundedAffinePermutation:
                 yield BoundedAffinePermutation(my_sn=list(perm),
                                                decorations=real_decoration,n_val=my_n)
                 real_decoration = [None]*my_n
+
+    def _swap_two(self,idx:int,jdx:int) -> None:
+        """
+        swap idx+m*self.my_n and jdx+m*self.my_n for all m in Z
+        """
+        #pylint:disable=protected-access
+        self.my_underlying._swap_two(idx,jdx)
+
+    def bridge_decomposition(self) -> Iterator[Tuple[int,int]]:
+        """
+        as a product of transpositions
+        should be the one satisfying condition 7.9.12 of Lauren Williams cluster book
+        """
+        self_copy = cast(BoundedAffinePermutation,deepcopy(self))
+        while self_copy.quot_to_sn() != list(range(1,self_copy.my_n+1)):
+            for diff in range(1,self_copy.my_n):
+                for idx in range(1,self_copy.my_n-diff+1):
+                    jdx = idx+diff
+                    same_order = self_copy[idx]<self_copy[jdx]
+                    idx_not_fixed = self_copy[idx] % self_copy.my_n != idx % self_copy.my_n
+                    jdx_not_fixed = self_copy[jdx] % self_copy.my_n != jdx % self_copy.my_n
+                    in_between_fixed = all(
+                        self_copy[kdx] % self_copy.my_n == kdx % self_copy.my_n
+                        for kdx in range(idx+1,jdx))
+                    if same_order and \
+                        idx_not_fixed and \
+                        jdx_not_fixed and \
+                        in_between_fixed:
+                        #pylint:disable=protected-access
+                        self_copy._swap_two(idx,jdx)
+                        yield (idx,jdx)
+                        if self_copy.quot_to_sn() == list(range(1,self_copy.my_n+1)):
+                            return
+
+    #pylint:disable=too-many-locals
+    def to_plabic(self) -> PlabicGraph:
+        """
+        a plabic graph with bridges for each letter
+        the BCFW diagram
+        """
+        builder = PlabicGraphBuilder()
+        builder.set_num_external(self.my_n)
+        for idx in range(self.my_n):
+            builder.add_external_bdry_vertex(f"ext{idx+1}",idx,
+                                             f"int{idx+1},0",
+                                             {"position":(idx+1,0)})
+        cur_num = [0]*self.my_n
+        last_color : List[Optional[BiColor]] = [None]*self.my_n
+        num_transpositions = 0
+        all_transpositions = self.bridge_decomposition()
+        for letter_num,(idx,jdx) in enumerate(all_transpositions):
+            left_side_name = f"int{idx},{cur_num[idx-1]}"
+            right_side_name = f"int{jdx},{cur_num[jdx-1]}"
+            above_name_left = f"int{idx},{cur_num[idx-1]-1}"\
+                if cur_num[idx-1]>0 else f"ext{idx}"
+            above_name_right = f"int{jdx},{cur_num[jdx-1]-1}"\
+                if cur_num[jdx-1]>0 else f"ext{jdx}"
+            below_name_left = f"int{idx},{cur_num[idx-1]+1}"
+            below_name_right = f"int{jdx},{cur_num[jdx-1]+1}"
+            builder.add_internal_vertex(left_side_name,BiColor.GREEN,
+                                        [above_name_left,right_side_name,below_name_left],
+                                        {"position":(idx,-letter_num-1)})
+            builder.add_internal_vertex(right_side_name,BiColor.RED,
+                                        [above_name_right,below_name_right,left_side_name],
+                                        {"position":(jdx,-letter_num-1)})
+            last_color[idx-1] = BiColor.GREEN
+            last_color[jdx-1] = BiColor.RED
+            cur_num[idx-1]+=1
+            cur_num[jdx-1]+=1
+            num_transpositions += 1
+            assert builder.extra_node_props is not None
+            assert "position" in builder.extra_node_props[left_side_name]
+            assert "position" in builder.extra_node_props[right_side_name]
+        word_length = num_transpositions
+        to_collapse_pairs : List[Tuple[str,str]] = []
+        for idx in range(self.my_n):
+            last_idx_name = f"int{idx+1},{cur_num[idx]}"
+            above_name = f"int{idx+1},{cur_num[idx]-1}" if cur_num[idx]>0 else f"ext{idx+1}"
+            my_color = BiColor.GREEN if self[idx+1]>idx+1 else BiColor.RED
+            if last_color[idx] is not None:
+                my_color = cast(BiColor,last_color[idx])
+                to_collapse_pairs.append((above_name,last_idx_name))
+                cur_height = cast(float,-word_length-1)
+            else:
+                cur_height = -0.5
+            builder.add_internal_vertex(last_idx_name,my_color,
+                                        [above_name],
+                                        {"position":(idx+1,cur_height)})
+            assert builder.extra_node_props is not None
+            assert "position" in builder.extra_node_props[last_idx_name]
+        my_plabic = builder.build()
+
+        def collapse_to_first(data_1 : ExtraData,
+                              _data_2 : ExtraData,
+                              _surrounding_plabic : PlabicGraph) -> ExtraData:
+            """
+            an extra data transformer for contract edge move
+            that collapses them to the first vertex
+            """
+            d1_pos = data_1["position"]
+            return {"position":d1_pos}
+
+        for this_vertex,that_vertex in to_collapse_pairs:
+            success, why = my_plabic.contract_edge(this_vertex,that_vertex,
+                                                   this_vertex,collapse_to_first)
+            assert success, why
+        return my_plabic
 
 class AffinePermutation:
     """
@@ -834,3 +965,15 @@ class BruhatInterval:
                 leq_w_set = known_leq_dict.get(w_potential,set())
                 if v_potential.bruhat_leq(w_potential,geq_v_set,leq_w_set):
                     yield BruhatInterval(deepcopy(v_potential),deepcopy(w_potential))
+
+def main():
+    """
+    draws the bridge graphs for all decorated permutations on 3 letters
+    """
+    my_n = 3
+    for cur_ba in BoundedAffinePermutation.all_bounded_affine_perms(my_n):
+        cur_plabic = cur_ba.to_plabic()
+        cur_plabic.draw()
+
+if __name__ == '__main__':
+    main()

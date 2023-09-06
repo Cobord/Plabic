@@ -7,6 +7,7 @@ from math import factorial
 from typing import Dict,Set
 from plabic import AffinePermutation, BoundedAffinePermutation
 from plabic.ba_permutation import BruhatInterval
+from plabic.plabic_diagram import BiColor
 
 def test_coxeter_muls():
     """
@@ -303,3 +304,21 @@ def test_bruhat():
     assert perm_2 in known_leq_dict[perm_3]
     assert perm_3 in known_geq_dict[perm_1]
     assert perm_2 in known_geq_dict[perm_1]
+
+def test_plabic():
+    """
+    plabic graphs constructed using bridge decomposition
+    """
+    my_n = 4
+    for cur_ba in BoundedAffinePermutation.all_bounded_affine_perms(my_n):
+        cur_plabic = cur_ba.to_plabic()
+        assert "position" in cur_plabic.my_extra_props
+        for idx in range(1,my_n+1):
+            fix_pt_info,idx_goes_to = cur_plabic.bdry_to_bdry(f"ext{idx}")
+            expected_go_to_num = cur_ba[idx] % my_n if cur_ba[idx] % my_n != 0 else my_n
+            if fix_pt_info is not None:
+                if fix_pt_info == BiColor.GREEN:
+                    assert cur_ba[idx]==idx+my_n
+                else:
+                    assert cur_ba[idx]==idx
+            assert idx_goes_to == f"ext{expected_go_to_num}"

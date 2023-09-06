@@ -983,8 +983,9 @@ class PlabicGraph:
             this_vertex, that_vertex, key_this_that)
 
         if extra_data_transformer is None and \
-            self.my_extra_props.issubset(["my_perfect_edge","position"]):
-            pass # extra_data_transformer = __insert_bivalent_position_transformer
+            self.my_extra_props.issubset(["my_perfect_edge","position"]) and \
+            "position" in self.my_extra_props:
+            extra_data_transformer = _insert_bivalent_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -1070,8 +1071,9 @@ class PlabicGraph:
                 if self.multi_edge_permutation.get((adj, node_to_go), None) is not None:
                     del self.multi_edge_permutation[(adj, node_to_go)]
         if extra_data_transformer is None and \
-            self.my_extra_props.issubset(["my_perfect_edge","position"]):
-            pass # extra_data_transformer = __contract_edge_position_transformer
+            self.my_extra_props.issubset(["my_perfect_edge","position"]) and \
+            "position" in self.my_extra_props:
+            extra_data_transformer = _contract_edge_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -1615,7 +1617,7 @@ class PlabicGraph:
         if show_as_well:
             plt.show()
 
-def __flip_position_transformer(data_1 : ExtraData,
+def _flip_position_transformer(data_1 : ExtraData,
                                 data_2 : ExtraData,
                                 surrounding_plabic : PlabicGraph) -> Tuple[ExtraData, ExtraData]:
     """
@@ -1633,7 +1635,7 @@ def __flip_position_transformer(data_1 : ExtraData,
     _found_rad, _rad = surrounding_plabic.radius_unoccupied(halfway_btw, [])
     raise NotImplementedError("__flip_position_transformer")
 
-def __insert_bivalent_position_transformer(data_1 : ExtraData,
+def _insert_bivalent_position_transformer(data_1 : ExtraData,
                                            data_2 : ExtraData,
                                            _surrounding_plabic : PlabicGraph) -> ExtraData:
     """
@@ -1644,7 +1646,7 @@ def __insert_bivalent_position_transformer(data_1 : ExtraData,
     halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
     return {"position":halfway_btw}
 
-def __contract_edge_position_transformer(data_1 : ExtraData,
+def _contract_edge_position_transformer(data_1 : ExtraData,
                                          data_2 : ExtraData,
                                          _surrounding_plabic : PlabicGraph) -> ExtraData:
     """
@@ -1655,7 +1657,7 @@ def __contract_edge_position_transformer(data_1 : ExtraData,
     halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
     return {"position":halfway_btw}
 
-def __split_vertex_position_transformer(data_1 : ExtraData,
+def _split_vertex_position_transformer(data_1 : ExtraData,
                                         surrounding_plabic : PlabicGraph)\
                                             -> Tuple[ExtraData, ExtraData]:
     """
