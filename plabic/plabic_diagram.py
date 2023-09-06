@@ -5,6 +5,7 @@ PLAnar BIColored
 # pylint:disable=too-many-lines
 from __future__ import annotations
 from enum import Enum, auto
+import functools
 import numbers
 from math import sqrt
 from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set, Iterator
@@ -857,8 +858,9 @@ class PlabicGraph:
                 if self.multi_edge_permutation.get((adj, node_to_go), None) is not None:
                     del self.multi_edge_permutation[(adj, node_to_go)]
         if extra_data_transformer is None and \
-            self.my_extra_props.issubset(["my_perfect_edge","position"]):
-            pass # extra_data_transformer = __flip_position_transformer
+            self.my_extra_props.issubset(["my_perfect_edge","position"]) and \
+            "position" in self.my_extra_props:
+            extra_data_transformer = _flip_position_transformer
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             old_that_data = cast(ExtraData, self.my_graph.nodes[that_vertex])
@@ -1144,18 +1146,18 @@ class PlabicGraph:
             go_to_1 = list(range(split_bounds[0]+1, this_out_degree)) +\
                 list(range(0, split_bounds[1]))
 
-        go_to_1_full = []
-        seen_on_1 = set()
-        will_multiconnect_1 = set()
+        go_to_1_full : List[Tuple[int,str,int]] = []
+        seen_on_1 : Set[str] = set()
+        will_multiconnect_1 : Set[str] = set()
         for on_1_key, on_this_key in enumerate(go_to_1):
             tgt, on_tgt_key = self._by_edge_number(this_vertex, on_this_key)
             go_to_1_full.append((on_1_key, tgt, on_tgt_key))
             if tgt in seen_on_1:
                 will_multiconnect_1.add(tgt)
             seen_on_1.add(tgt)
-        go_to_2_full = []
-        seen_on_2 = set()
-        will_multiconnect_2 = set()
+        go_to_2_full : List[Tuple[int,str,int]] = []
+        seen_on_2 : Set[str] = set()
+        will_multiconnect_2 : Set[str] = set()
         for on_2_key, on_this_key in enumerate(go_to_2):
             tgt, on_tgt_key = self._by_edge_number(this_vertex, on_this_key)
             go_to_2_full.append((on_2_key, tgt, on_tgt_key))
@@ -1170,8 +1172,10 @@ class PlabicGraph:
             if self.multi_edge_permutation.get((adj, this_vertex), None) is not None:
                 del self.multi_edge_permutation[(adj, this_vertex)]
         if extra_data_transformer is None and \
-            self.my_extra_props.issubset(["my_perfect_edge","position"]):
-            pass # extra_data_transformer = __split_vertex_position_transformer
+            self.my_extra_props.issubset(["my_perfect_edge","position"]) and \
+            "position" in self.my_extra_props:
+            extra_data_transformer = functools.partial(
+                _split_vertex_position_transformer,this_vertex,(seen_on_1,seen_on_2))
         if extra_data_transformer is not None:
             old_this_data = cast(ExtraData, self.my_graph.nodes[this_vertex])
             new_props_1, new_props_2 = extra_data_transformer(
@@ -1632,7 +1636,10 @@ def _flip_position_transformer(data_1 : ExtraData,
     the new positions are the endpoints of that segment
     use the rest of the positions in _p to determine how long the segment is
     the same length as the original segment unless there are other points in the way"""
-    _found_rad, _rad = surrounding_plabic.radius_unoccupied(halfway_btw, [])
+    found_rad, rad_unoccupied = surrounding_plabic.radius_unoccupied(halfway_btw, [])
+    displacement = (d1_pos[0]-d2_pos[0],d1_pos[1]-d2_pos[1])
+    dist_d1_d2 = sqrt(displacement[0]**2+displacement[1]**2)
+    _radius_to_use = min(dist_d1_d2/2.0, rad_unoccupied) if found_rad else dist_d1_d2/2.0
     raise NotImplementedError("__flip_position_transformer")
 
 def _insert_bivalent_position_transformer(data_1 : ExtraData,
@@ -1657,7 +1664,8 @@ def _contract_edge_position_transformer(data_1 : ExtraData,
     halfway_btw = ((d1_pos[0]+d2_pos[0])/2.0,(d1_pos[1]+d2_pos[1])/2.0)
     return {"position":halfway_btw}
 
-def _split_vertex_position_transformer(data_1 : ExtraData,
+def _split_vertex_position_transformer(my_name : str,_nhbrs_on_each : Tuple[Set[str]],
+                                       data_1 : ExtraData,
                                         surrounding_plabic : PlabicGraph)\
                                             -> Tuple[ExtraData, ExtraData]:
     """
@@ -1666,5 +1674,12 @@ def _split_vertex_position_transformer(data_1 : ExtraData,
     # find the radius around d1_pos that is not occupied by any other vertices
     # the 2 vertices will need to be somewhere within that ball
     d1_pos = data_1["position"]
-    _found_rad, _rad = surrounding_plabic.radius_unoccupied(d1_pos, [])
+    found_rad, rad_unoccupied = surrounding_plabic.radius_unoccupied(d1_pos, [my_name])
+    if not found_rad:
+        raise NotImplementedError("__split_vertex_position_transformer")
+    _position_1 = (d1_pos[0]-rad_unoccupied*1.0/3.0,d1_pos[1])
+    _position_2 = (d1_pos[0]+rad_unoccupied*1.0/3.0,d1_pos[1])
     raise NotImplementedError("__split_vertex_position_transformer")
+    # use the nhbrs_on_each and their positions to determine which position
+    #   for which new vertex
+    # return ({"position":position_1},{"position":position_2})

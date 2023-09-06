@@ -690,9 +690,6 @@ class AffinePermutation:
         # could still be leq because we might be using reduced words
         # which do not make it obvious
 
-        if len(reduced_self)+1==len(reduced_other):
-            pass
-
         # check the condition on ij jumping self[i,j]<=other[i,j] for all i,j
         # on some pairs i,j
         for try_i,try_j in itertools.permutations(range(1,self.my_n+1),2):
@@ -705,6 +702,8 @@ class AffinePermutation:
             return True
         # couldn't prove not leq with the limited set of ij pairs we tried
         # we need to work harder
+        if len(reduced_self)+1==len(reduced_other):
+            raise NotImplementedError
 
         raise NotImplementedError
 
