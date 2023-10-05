@@ -677,13 +677,15 @@ class AffinePermutation:
             return False
         if len(reduced_self)==len(reduced_other):
             to_return = self==other
-            if to_return and known_leq_other is not None and known_geq_self is not None:
+            if to_return and known_leq_other is not None:
                 known_leq_other.add(self)
+            if to_return and known_geq_self is not None:
                 known_geq_self.add(other)
             return to_return
         if self.__is_sublist(reduced_self, reduced_other):
-            if known_leq_other is not None and known_geq_self is not None:
+            if known_leq_other is not None:
                 known_leq_other.add(self)
+            if known_geq_self is not None:
                 known_geq_self.add(other)
             return True
         # not manifestly a subword
@@ -696,8 +698,9 @@ class AffinePermutation:
             if len(self.ij_jumpers(try_i,try_j))>len(other.ij_jumpers(try_i,try_j)):
                 return False
         if self.is_lift_from_sn and other.is_lift_from_sn:
-            if known_leq_other is not None and known_geq_self is not None:
+            if known_leq_other is not None:
                 known_leq_other.add(self)
+            if known_geq_self is not None:
                 known_geq_self.add(other)
             return True
         # couldn't prove not leq with the limited set of ij pairs we tried
