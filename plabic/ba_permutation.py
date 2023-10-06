@@ -760,6 +760,7 @@ class AffinePermutation:
             for letter in available_letters[1:]:
                 if (letter - last_added) != 1 and (letter-last_added) != self.my_n - 1:
                     commuting_letters.append(letter)
+                    last_added = letter
             return commuting_letters
 
         my_identity = AffinePermutation.identity(self.my_n)
