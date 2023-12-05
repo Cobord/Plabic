@@ -22,6 +22,9 @@ class ShiftEquivariantZBijection:
     Common to all bijections of Z
     satisfying f(k+n) = f(k)+n for all k
     for some n
+    One can also think of these as
+    the invertible Hom(N,N) in the paracyclic category
+    N is either n,n+1 depending on notation
     """
     my_n : int
     my_f : Dict[int,int]
