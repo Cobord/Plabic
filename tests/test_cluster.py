@@ -45,6 +45,30 @@ def test_a2():
     assert np.array_equal(c.my_antisymmetric(),[[0,-1],[1,0]])
     assert my_cluster_same(c.cluster,{"1":B,"2":A})
 
+def test_make_a2():
+    """
+    a2 quiver with static method
+    """
+    #pylint:disable=invalid-name
+    ([A,B],c) = Cluster.make_type_an_cluster(2)
+    assert np.array_equal(c.my_antisymmetric(),[[0,1],[-1,0]])
+    assert my_cluster_same(c.cluster,{"1":A,"2":B})
+    c.mutate("1")
+    assert np.array_equal(c.my_antisymmetric(),[[0,-1],[1,0]])
+    assert my_cluster_same(c.cluster,{"1":(B+1)/A,"2":B})
+    c.mutate("1")
+    assert np.array_equal(c.my_antisymmetric(),[[0,1],[-1,0]])
+    assert my_cluster_same(c.cluster,{"1":A,"2":B})
+    c.mutate("1")
+    c.mutate("2")
+    assert np.array_equal(c.my_antisymmetric(),[[0,1],[-1,0]])
+    assert my_cluster_same(c.cluster,{"1":(B+1)/A,"2":(1+A+B)/(A*B)})
+    c.mutate("1")
+    c.mutate("2")
+    c.mutate("1")
+    assert np.array_equal(c.my_antisymmetric(),[[0,-1],[1,0]])
+    assert my_cluster_same(c.cluster,{"1":B,"2":A})
+
 def test_square():
     """
     affine a3 quiver

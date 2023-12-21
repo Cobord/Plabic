@@ -701,16 +701,20 @@ class AffinePermutation:
             if len(self.ij_jumpers(try_i,try_j))>len(other.ij_jumpers(try_i,try_j)):
                 return False
         if self.is_lift_from_sn and other.is_lift_from_sn:
+            # the above pair check is conclusive for lifts from Sn
+            # so we can definitively conclude true in this case
             if known_leq_other is not None:
                 known_leq_other.add(self)
             if known_geq_self is not None:
                 known_geq_self.add(other)
             return True
         # couldn't prove not leq with the limited set of ij pairs we tried
-        # we need to work harder
+        # and it wasn't from Sn so that was not a conclusive yes they are leq
         if len(reduced_self)+1==len(reduced_other):
+            # try omitting a letter from reduced_other one by one
             raise NotImplementedError
 
+        # none of the easy strategies worked
         raise NotImplementedError
 
     def quot_to_sn(self) -> List[int]:

@@ -10,6 +10,7 @@ from typing import Callable, Optional, TypeVar,Protocol,\
 from functools import reduce
 import networkx as nx
 import matplotlib.pyplot as plt
+from sympy import Expr, Integer, symbols
 
 T = TypeVar("T")
 
@@ -168,3 +169,25 @@ class Cluster(Generic[NT]):
         if not cluster_same(self.cluster,other.cluster):
             return False
         return self.my_antisymmetric() == other.my_antisymmetric()
+
+    @staticmethod
+    def make_type_an_cluster(my_n : int) -> Tuple[List[Expr],Cluster[Expr]]:
+        """
+        make the cluster for type An with sympy variables
+        """
+        if my_n<=0:
+            raise TypeError("n must be a natural number greater than 0")
+        variable_pool = ["a","b","c","d","x","y","z","w","v",
+                         "f","g","h","l","m","n","o",
+                         "p","q","r","s","t","u"]
+        if my_n>len(variable_pool):
+            raise ValueError(f"Only have {len(variable_pool)} variables available")
+        variables_used = variable_pool[0:my_n]
+        variable_list = list(symbols(",".join(variables_used),commutative=True))
+        my_an_quiver = nx.MultiDiGraph()
+        for cur_node in range(1,my_n+1):
+            my_an_quiver.add_node(str(cur_node))
+        for cur_node in range(1,my_n):
+            my_an_quiver.add_edge(str(cur_node),str(cur_node+1))
+        return_cluster = Cluster[Expr](my_an_quiver,variable_list,Integer(1),lambda z: z.simplify())
+        return variable_list, return_cluster

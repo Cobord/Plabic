@@ -10,3 +10,4 @@ from .double_wiring import WiringDiagram
 from .triangulation import Triangulation
 from .ba_permutation import AffinePermutation, BoundedAffinePermutation, ShiftEquivariantZBijection
 from .cluster import Cluster,cluster_same
+from .tnn_grassmannian import MinorSignConstraints,TNNGrassChart,ConvexHull
