@@ -274,3 +274,14 @@ so we can easily pick out the one corresponding to each vertex of the quiver.
 cluster_same compares the two clusters and can also be given an additional function which can do more simplification. This will be needed only if the simplifier in the Cluster initialization was too weak. 
 
 The draw method simply draws the underlying quiver.
+
+# TNN Grassmannian
+
+MinorSignConstraints allows one to specify which minors of a matrix are 0, positive, negative, etc.
+The minors are specified as which columns are selected from the matrix. The total number of columns is not fixed,
+just that it has to be at least some value for all the constraints to make sense.
+You can change the number of columns in your example, and the additional columns will be unconstrained.
+
+TNNGrassChart is where you actually work with the symbolic matrix representing a R_>0^d chart in Mat(k,n)
+You specify the names of the variables which are all treated as ranging over positive reals
+The constraints are imposed and we can enforce that all the sign constraints on minors are manifestly satisfied 
