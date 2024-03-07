@@ -8,8 +8,10 @@ from __future__ import annotations
 from typing import Callable, Optional, TypeVar,Protocol,\
     Generic,List,Dict,Tuple,Set
 from functools import reduce
+#pylint:disable=import-error
 import networkx as nx
 import matplotlib.pyplot as plt
+#pylint:disable=import-error
 from sympy import Expr, Integer, symbols
 
 T = TypeVar("T")

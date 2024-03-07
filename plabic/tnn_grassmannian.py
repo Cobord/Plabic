@@ -6,7 +6,8 @@ from copy import deepcopy
 from functools import reduce
 import itertools
 from math import comb
-from typing import Callable, Dict, FrozenSet, List, Optional,Set
+from typing import Callable, Dict, FrozenSet, List, Optional,Set, Union
+#pylint:disable=import-error
 from sympy import Expr,Symbol,Integer
 import numpy as np
 from .sym_utils import nn_with_my_symbols,determinant
@@ -151,6 +152,8 @@ class MinorSignConstraints:
         0->n-1
         in all the sets
         """
+        if my_n < self.n_at_least:
+            raise ValueError("There were sign constraints with columns that do not exist")
         for cur_list in [self.which_positive,self.which_negative,
                          self.which_zero,self.which_nonpositive,
                          self.which_nonnegative,self.which_nonzero]:
@@ -179,6 +182,140 @@ class MinorSignConstraints:
             return is_positive or is_negative
         return True
 
+    def to_manifestly_positroidy(self,num_cols : int) -> PositroidySignConstraints:
+        """
+        convert to PositroidySignConstraints
+        """
+        assert self.is_positroidy(num_cols)
+        return PositroidySignConstraints(
+            which_positive = self.which_positive,
+            which_zero=self.which_zero)
+
+class PositroidySignConstraints:
+    """
+    when manifestly positroidy,
+    only store one of which_positive and which_zero
+    the others must be empty
+    and the one not being stored is all the other possibilities
+    """
+    def __init__(self,*,which_positive : List[Set[int]],which_zero : List[Set[int]]):
+        self.set_size = None
+        self.n_at_least = 0
+        for cur_list in [which_positive,
+                         which_zero]:
+            for cur_set in cur_list:
+                #pylint:disable=nested-min-max
+                self.n_at_least = max(self.n_at_least,max(cur_set))
+                if self.set_size is None:
+                    self.set_size = len(cur_set)
+                elif len(cur_set) != self.set_size:
+                    raise ValueError("All sets must be the same size")
+                if any(z<0 for z in cur_set):
+                    raise ValueError("All sets must be of natural numbers")
+        if len(which_positive)<len(which_zero):
+            self.which_positive = which_positive
+            self.which_zero = None
+        else:
+            self.which_positive = None
+            self.which_zero = which_zero
+
+    def is_positroidy(self, _num_cols : int) -> bool:
+        """
+        this is automatically positroidy
+        """
+        return True
+
+    def which_schubert_cell(self, num_cols : int,
+                            sorter : Optional[Callable[[int],int]] = None)\
+                                -> Set[int]:
+        """
+        give the corresponding schubert cell
+        possibly after using a different lexicographic order
+        if you do with all n! possibilities for sorter, then this is the
+        Gelfand-Serganova theorem
+        """
+        if self.n_at_least>=num_cols:
+            raise ValueError("There were sign constraints with columns that do not exist")
+        if self.set_size is None:
+            raise ValueError("No sets were provided so the set size property was never set")
+        total_pluckers = comb(num_cols,self.set_size)
+        if self.which_positive is None:
+            num_nonzeros = total_pluckers - len(self.which_zero)
+        else:
+            num_nonzeros = len(self.which_positive)
+        if num_nonzeros == 0:
+            raise ValueError(" ".join(["The constraints should be like a matroid specifying",
+                                       "some (but not all) plucker coordinates as zero",
+                                       "and the rest as nonzero"]))
+        if sorter is None:
+            # pylint: disable=unnecessary-lambda-assignment
+            sorter = lambda z : z
+        def my_set_leq(set_a : Set[int], set_b : Set[int]) -> bool:
+            """
+            set_a sorted compared to set_b sorted as lists
+            """
+            list_a = list(set_a)
+            list_a.sort(key = sorter)
+            list_b = list(set_b)
+            list_b.sort(key = sorter)
+            return list_a <= list_b
+        if self.which_positive is not None:
+            lex_min_set = reduce(lambda acc,x: x.copy() if my_set_leq(x,acc) else acc,
+                                self.which_positive)
+            return lex_min_set
+        if self.which_zero is not None:
+            which_positive = itertools.filterfalse(lambda item: item in self.which_zero,
+                                map(set,
+                                    itertools.combinations(range(self.n_at_least),self.set_size)
+                                ))
+            lex_min_set = reduce(lambda acc,x: x.copy() if my_set_leq(x,acc) else acc,
+                                which_positive)
+            return lex_min_set
+        raise ValueError("At least one of which_positive and which_zero must be known")
+
+    def to_hypersimplex_positroid_polytope(self,num_cols : int) -> Optional[ConvexHull]:
+        """
+        give the positroid polytope in the hypersimplex
+        given by the image of the moment map from this positroid in tnn grassmanian
+        to the hypersimplex
+        See https://arxiv.org/abs/2104.08254
+        """
+        #pylint:disable=unused-variable
+        def indicator_vector(which_is : Set[int]) -> np.ndarray:
+            to_return = np.zeros(num_cols)
+            for cur_i in which_is:
+                to_return[cur_i] = 1
+            return to_return
+        # return [indicator_vector(z) for z in self.which_positive]
+        raise NotImplementedError
+
+    def cyclic_shift(self,my_n : int,num_times : int) -> None:
+        """
+        i->i-1
+        0->n-1
+        in all the sets
+        """
+        if self.which_positive is not None:
+            for idx_in_list,cur_set in enumerate(self.which_positive):
+                self.which_positive[idx_in_list] = {(z-num_times)%my_n for z in cur_set}
+        if self.which_zero is not None:
+            for idx_in_list,cur_set in enumerate(self.which_zero):
+                self.which_zero[idx_in_list] = {(z-num_times)%my_n for z in cur_set}
+
+    def check(self,k_subset : Set[int], cur_expr : Expr, var_set : Set[Symbol]) -> bool:
+        """
+        whichever constraint k_subset is in, check that sign constraint is satisfied
+        """
+        if self.which_positive is not None:
+            if k_subset in self.which_positive:
+                return nn_with_my_symbols(cur_expr,True,var_set)
+            return cur_expr == Integer(0)
+        if self.which_zero is not None:
+            if k_subset in self.which_zero:
+                return cur_expr == Integer(0)
+            return nn_with_my_symbols(cur_expr,True,var_set)
+        raise ValueError("At least one of which_positive and which_zero must be known")
+
 class TNNGrassChart():
     """
     An image of R^{d}_{gt 0} in Mat(k,n)
@@ -186,7 +323,7 @@ class TNNGrassChart():
     the purpose of this is for positroid charts
     """
     def __init__(self, my_matrix : List[List[Expr]],*,variables : List[Symbol],
-                 sign_constraints : MinorSignConstraints,
+                 sign_constraints : Union[MinorSignConstraints,PositroidySignConstraints],
                  check_tnn : bool = True,gives_positroid_cell : bool = False):
         """
         the k by n (k<=n) matrix is given symbolically with d symbol variables
@@ -211,14 +348,16 @@ class TNNGrassChart():
             raise ValueError("There were sign constraints with columns that do not exist")
         if sign_constraints.set_size != self.my_k:
             raise ValueError(f"Each constraint should have picked out {self.my_k} columns")
+        if sign_constraints.is_positroidy(self.my_n):
+            self.gives_positroid_cell = gives_positroid_cell
+            if isinstance(sign_constraints,MinorSignConstraints):
+                sign_constraints = sign_constraints.to_manifestly_positroidy(self.my_n)
+        else:
+            raise ValueError("The sign constraints were not the sort used for positroid cells")
         self.sign_constraints = sign_constraints
         self.cached_pluckers : Dict[FrozenSet,Expr] = {}
         if check_tnn:
             self.validate_pluckers()
-        if sign_constraints.is_positroidy(self.my_n):
-            self.gives_positroid_cell = gives_positroid_cell
-        else:
-            raise ValueError("The sign constraints were not the sort used for positroid cells")
 
     def cyclic_shift(self, num_times : int = 1) -> None:
         """
