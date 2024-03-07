@@ -285,3 +285,8 @@ You can change the number of columns in your example, and the additional columns
 TNNGrassChart is where you actually work with the symbolic matrix representing a R_>0^d chart in Mat(k,n)
 You specify the names of the variables which are all treated as ranging over positive reals
 The constraints are imposed and we can enforce that all the sign constraints on minors are manifestly satisfied 
+
+# BCFW Cells
+
+[As described in this paper](https://arxiv.org/pdf/2402.15568.pdf "A cluster of results on amplitudehedron tiles")
+Uses the operad composition for the BCFW product operation.
