@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plabic"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
   { name="Ammar Husain", email="ammar.s.husain@gmail.com" },
 ]
