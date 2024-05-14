@@ -2,9 +2,7 @@
 test for clusters
 """
 from typing import Dict
-#pylint:disable=import-error
 from sympy import Expr,symbols,Integer
-#pylint:disable=import-error
 import networkx as nx
 import numpy as np
 from plabic import Cluster,cluster_same

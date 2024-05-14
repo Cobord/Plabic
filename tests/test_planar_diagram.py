@@ -1,7 +1,7 @@
 """
 test planar diagrams
 """
-#pylint:disable=import-error,invalid-name,too-many-locals
+#pylint:disable=invalid-name,too-many-locals
 from typing import cast,List,Tuple
 from sympy import symbols, Symbol, Expr, Add, Mul, Pow, Integer, Rational, UnevaluatedExpr
 from plabic import PlanarNetwork, determinant, ChipType

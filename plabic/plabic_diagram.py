@@ -10,10 +10,8 @@ import numbers
 from math import sqrt
 from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set, Iterator
 import itertools
-#pylint:disable=import-error
 import networkx as nx
 import matplotlib.pyplot as plt
-# pylint:disable=import-error
 from .framed_2_disks import FramedDiskConfig
 
 Point = Tuple[float,float]

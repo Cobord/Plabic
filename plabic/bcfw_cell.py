@@ -3,6 +3,8 @@ BCFW cells
 https://arxiv.org/pdf/2402.15568.pdf
 """
 
+#pylint:disable=line-too-long,too-many-locals,unused-variable,unreachable
+
 from __future__ import annotations
 import random
 import string
@@ -124,4 +126,4 @@ class BCFWCell:
             return reason
         self.__my_kaleidoscope = butterfly
         self.__my_kaleidoscopes_outer_based_labelling = my_based_labelling
-        self.__my_positroid = ???
+        # self.__my_positroid = ???

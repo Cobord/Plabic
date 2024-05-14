@@ -6,7 +6,6 @@ from typing import Tuple,Set,List,Union,cast,Dict,Any
 from functools import reduce
 import itertools
 from math import sin, cos, pi as PI, atan2, sqrt
-#pylint:disable=import-error
 from .plabic_diagram import PlabicGraph, BiColor
 from .framed_2_disks import FramedDiskConfig
 

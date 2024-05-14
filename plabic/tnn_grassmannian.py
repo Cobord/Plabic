@@ -7,7 +7,6 @@ from functools import reduce
 import itertools
 from math import comb
 from typing import Callable, Dict, FrozenSet, List, Optional,Set, Union
-#pylint:disable=import-error
 from sympy import Expr,Symbol,Integer
 import numpy as np
 from .sym_utils import nn_with_my_symbols,determinant

@@ -1,7 +1,6 @@
 """
 test for tnn grassmannian
 """
-#pylint:disable=import-error
 from sympy import Integer,symbols
 from plabic.tnn_grassmannian import TNNGrassChart,MinorSignConstraints
 

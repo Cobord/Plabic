@@ -1,7 +1,7 @@
 """
 test Plabic graphs
 """
-#pylint:disable=import-error,too-many-locals
+#pylint:disable=too-many-locals
 from typing import List,Dict
 from plabic import PlabicGraph,BiColor,PlabicGraphBuilder
 

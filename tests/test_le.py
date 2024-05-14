@@ -2,7 +2,7 @@
 test Le diagrams
 """
 
-#pylint:disable=invalid-name,import-error
+#pylint:disable=invalid-name
 from typing import Set
 from plabic import LeDiagram
 

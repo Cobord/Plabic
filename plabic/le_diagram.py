@@ -6,7 +6,6 @@ from enum import Enum, auto
 from typing import List, Optional, Tuple, Set, Iterable, Union, TypeVar, Dict, cast, Iterator
 import itertools
 
-#pylint:disable=import-error
 from .plabic_diagram import BiColor, ExtraData, PlabicGraph
 from .ba_permutation import AffinePermutation, BruhatInterval
 

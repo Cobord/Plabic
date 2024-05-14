@@ -3,7 +3,6 @@ utilities with symbolic expressions
 """
 
 from typing import cast,Set,List,Optional
-#pylint:disable=import-error
 from sympy import Symbol, Expr, Add, Mul, Pow, Integer, Rational, UnevaluatedExpr
 
 #pylint:disable=too-many-return-statements

@@ -1,7 +1,7 @@
 """
 test for double wiring diagrams
 """
-#pylint:disable=invalid-name,import-error
+#pylint:disable=invalid-name
 from typing import List
 from plabic import WiringDiagram
 

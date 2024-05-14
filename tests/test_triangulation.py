@@ -1,7 +1,7 @@
 """
 test triangulations of convex m-gons
 """
-#pylint:disable=import-error,invalid-name,R0801
+#pylint:disable=invalid-name,R0801
 from math import pi as PI,sin,cos
 from plabic import Triangulation
 
