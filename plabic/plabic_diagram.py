@@ -12,6 +12,8 @@ from typing import Tuple, Optional, List, Dict, cast, Any, Callable, Set, Iterat
 import itertools
 import networkx as nx
 import matplotlib.pyplot as plt
+
+from .cyclic_utils import cyclic_equal
 from .framed_2_disks import FramedDiskConfig
 
 Point = Tuple[float,float]
@@ -948,9 +950,11 @@ class PlabicGraph:
         self.my_graph.remove_node(my_bivalent_vertex)
         self.my_graph.add_edge(side_1, side_2, idx_from_side_1)
         self.my_graph.add_edge(side_2, side_1, idx_from_side_2)
+        #pylint:disable=possibly-used-before-assignment
         if old_dict_12 is not None:
             old_dict_12[idx_from_side_1] = idx_from_side_2
             self.multi_edge_permutation[(side_1, side_2)] = old_dict_12
+        #pylint:disable=possibly-used-before-assignment
         if old_dict_21 is not None:
             old_dict_21[idx_from_side_2] = idx_from_side_1
             self.multi_edge_permutation[(side_2, side_1)] = old_dict_21
@@ -1346,20 +1350,6 @@ class PlabicGraph:
             return False, "Not enough internal disks"
         relevant_internal = self.my_internal_bdry[which_internal_disk]
 
-        def cyclic_equal(a_list: List[str], b_list: List[str]) -> bool:
-            """
-            some cyclic permutation of a_list is equal to b_list
-            """
-            if len(a_list) != len(b_list):
-                return False
-            for shift in range(len(a_list)):
-                up_to = len(b_list) - shift
-                first_part = a_list[shift:len(a_list)] == b_list[0:up_to]
-                second_part = a_list[0:shift] == b_list[up_to:len(b_list)]
-                if first_part and second_part:
-                    return True
-            return False
-
         if not cyclic_equal(relevant_internal, other.my_external_nodes):
             return False, "The boundary vertices that should be glued did not match up"
 
@@ -1607,9 +1597,15 @@ class PlabicGraph:
             edge_colors = [oriented_arrows if overridden_arrow_orientation(u, v, k)
                         else something_transparent
                         for u, v, k in self.my_graph.edges(keys=True)]
-        nx.draw(self.my_graph, pos=all_positions,
-                node_color=all_colors, edge_color=edge_colors,
-                arrows=draw_arrowheads, with_labels=show_node_names)
+            draw_arrowheads = None
+        if draw_arrowheads is not None:
+            nx.draw(self.my_graph, pos=all_positions,
+                    node_color=all_colors, edge_color=edge_colors,
+                    arrows=draw_arrowheads, with_labels=show_node_names)
+        else:
+            nx.draw(self.my_graph, pos=all_positions,
+                    node_color=all_colors, edge_color=edge_colors,
+                    with_labels=show_node_names)
         if self.circles_config is not None:
             self.circles_config.draw(on_top_of_existing=True,
                 show_as_well=False,

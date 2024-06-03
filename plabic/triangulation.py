@@ -48,6 +48,7 @@ class Triangulation:
         both_triangles = is_triangle_1 and is_triangle_2
         boxed_index : Union[int,Tuple[int,int]] = -1
         if both_triangles:
+            #pylint:disable=possibly-used-before-assignment
             boxed_index = (box_by_1,box_by_2)
         elif is_triangle_1:
             boxed_index = box_by_1

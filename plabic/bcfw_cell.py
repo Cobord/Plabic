@@ -10,8 +10,8 @@ import random
 import string
 from typing import List, Set
 
-from plabic.plabic_diagram import PlabicGraph, PlabicGraphBuilder
-from plabic.tnn_grassmannian import PositroidySignConstraints
+from .plabic_diagram import PlabicGraph, PlabicGraphBuilder
+from .tnn_grassmannian import PositroidySignConstraints
 
 #pylint:disable=too-few-public-methods
 class ButterflyData:
@@ -46,6 +46,7 @@ class BCFWCell:
     def __init__(self, k : int):
         """
         the base cases
+        first bullet point above
         """
         raise NotImplementedError
 

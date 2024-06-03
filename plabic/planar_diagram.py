@@ -66,6 +66,7 @@ class PlanarNetwork:
             ret_val.append([cur_edge])
         return ret_val
 
+    #pylint:disable=too-many-arguments
     def __init__(self, n: Nat, *, edge_list: Optional[List[List[EdgeData]]] = None,
                  chip_word: Optional[ChipWord] = None, chip_weights: Optional[List[WeightType]] = None,
                  multiplicative_identity: WeightType = 1.0,

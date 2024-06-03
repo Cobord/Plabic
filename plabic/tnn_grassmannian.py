@@ -6,7 +6,7 @@ from copy import deepcopy
 from functools import reduce
 import itertools
 from math import comb
-from typing import Callable, Dict, FrozenSet, List, Optional,Set, Union
+from typing import Callable, Dict, FrozenSet, Iterable, List, Optional,Set, Union
 from sympy import Expr,Symbol,Integer
 import numpy as np
 from .sym_utils import nn_with_my_symbols,determinant
@@ -14,6 +14,14 @@ from .sym_utils import nn_with_my_symbols,determinant
 # up to caller to put this into some data structure that does convex hull
 # manipulations, here it just says to take the convex hull of the provided points
 ConvexHull = List[np.ndarray]
+
+def create_convex_hull(points: Iterable[np.ndarray]) -> ConvexHull:
+    """
+    Creates a convex hull
+    TODO a representation better for manipulation than just saying
+    it is the convex hull of these points
+    """
+    return list(points)
 
 #pylint:disable=too-many-instance-attributes
 class MinorSignConstraints:
@@ -142,8 +150,8 @@ class MinorSignConstraints:
             for cur_i in which_is:
                 to_return[cur_i] = 1
             return to_return
-        # return [indicator_vector(z) for z in self.which_positive]
-        raise NotImplementedError
+        all_pts = (indicator_vector(z) for z in self.which_positive)
+        return create_convex_hull(all_pts)
 
     def cyclic_shift(self,my_n : int,num_times : int) -> None:
         """
@@ -285,8 +293,8 @@ class PositroidySignConstraints:
             for cur_i in which_is:
                 to_return[cur_i] = 1
             return to_return
-        # return [indicator_vector(z) for z in self.which_positive]
-        raise NotImplementedError
+        all_pts = (indicator_vector(z) for z in self.which_positive)
+        return create_convex_hull(all_pts)
 
     def cyclic_shift(self,my_n : int,num_times : int) -> None:
         """
@@ -321,6 +329,7 @@ class TNNGrassChart():
     the Plucker coordinates have some sign constraints
     the purpose of this is for positroid charts
     """
+    #pylint:disable=too-many-arguments
     def __init__(self, my_matrix : List[List[Expr]],*,variables : List[Symbol],
                  sign_constraints : Union[MinorSignConstraints,PositroidySignConstraints],
                  check_tnn : bool = True,gives_positroid_cell : bool = False):

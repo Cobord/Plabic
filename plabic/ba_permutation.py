@@ -30,7 +30,7 @@ class ShiftEquivariantZBijection:
     my_f : Dict[int,int]
     is_lift_from_sn : bool
 
-    # pylint:disable=too-many-locals
+    # pylint:disable=too-many-locals, too-many-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
@@ -288,6 +288,7 @@ class BoundedAffinePermutation:
     my_k : int
     my_n : int
 
+    # pylint:disable=too-many-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
@@ -483,6 +484,7 @@ class AffinePermutation:
     my_n : int
     is_lift_from_sn : bool
 
+    # pylint:disable=too-many-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
