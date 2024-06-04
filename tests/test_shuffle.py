@@ -2,7 +2,7 @@
 test for shuffles
 """
 
-from plabic.shuffle import inverse_of_shuffles, is_inverse_shuffle, shuffle_product
+from plabic.shuffle import inverse_of_shuffles, inverse_perm, is_inverse_shuffle, shuffle_product
 
 def test_is_shuffle():
     """
@@ -21,7 +21,7 @@ def test_shuffle_gen():
                          "23401","23041","23014","20341","20134","20314"]
     shuffle_count = 0
     for sigma_inverse in inverse_of_shuffles(2,3):
-        sigma = [sigma_inverse.index(idx) for idx in range(5)]
+        sigma = inverse_perm(sigma_inverse, 5)
         sigma_str = "".join((str(x) for x in sigma))
         assert sigma_str in expected_shuffles
         shuffle_count += 1

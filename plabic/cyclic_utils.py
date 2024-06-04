@@ -3,7 +3,7 @@ utilities for lists being treated as items in (counter)clockwise order
 """
 
 from itertools import chain
-from typing import List, Optional, Tuple, TypeVar
+from typing import List, Optional, Protocol, Tuple, TypeVar
 T = TypeVar("T")
 
 def cyclic_equal(a_list: List[T], b_list: List[T]) -> bool:
@@ -19,6 +19,25 @@ def cyclic_equal(a_list: List[T], b_list: List[T]) -> bool:
         if first_part and second_part:
             return True
     return False
+
+class Comparable(Protocol):
+    """
+    the alphabet for a Lyndon word is ordered
+    """
+    def __leq__(self,other)->bool:...
+U = TypeVar("U",bound=Comparable)
+
+def is_lyndon(a_list: List[U]) -> bool:
+    """
+    is the word smaller than all of it's proper suffixes
+    """
+    if len(a_list)==0:
+        return False
+    for split in range(1,len(a_list)):
+        suffix = a_list[split:]
+        if not a_list<=suffix:
+            return False
+    return True
 
 def neighboring_indices(face: List[T], this_vertex: T, that_vertex: T) -> Optional[Tuple[int,int]]:
     """

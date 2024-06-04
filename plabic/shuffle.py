@@ -36,6 +36,15 @@ def inverse_of_shuffles(n1 : int, n2 : int):
 
 T = TypeVar("T")
 
+def inverse_perm(sigma_inverse : List[int],perm_of: int) -> List[int]:
+    """
+    sigma from sigma_inverse
+    """
+    sigma = list(range(perm_of))
+    for (idx, comes_from) in enumerate(sigma_inverse):
+        sigma[comes_from] = idx
+    return sigma
+
 def shuffle_product(factor_1: List[T], factor_2: List[T]):
     """
     give the summands of the shuffle product
@@ -44,6 +53,6 @@ def shuffle_product(factor_1: List[T], factor_2: List[T]):
     n2 = len(factor_2)
     concatenated : List[T] = list(itertools.chain(factor_1, factor_2))
     for sigma_inverse in inverse_of_shuffles(n1,n2):
-        sigma = [sigma_inverse.index(idx) for idx in range(n1+n2)]
+        sigma = inverse_perm(sigma_inverse,n1+n2)
         assert [sigma[idx] for idx in sigma_inverse] == list(range(n1+n2))
         yield [concatenated[idx] for idx in sigma]
