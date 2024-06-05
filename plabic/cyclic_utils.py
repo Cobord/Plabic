@@ -3,6 +3,7 @@ utilities for lists being treated as items in (counter)clockwise order
 """
 
 from itertools import chain
+import itertools
 from typing import List, Optional, Protocol, Tuple, TypeVar
 T = TypeVar("T")
 
@@ -20,6 +21,7 @@ def cyclic_equal(a_list: List[T], b_list: List[T]) -> bool:
             return True
     return False
 
+#pylint:disable=too-few-public-methods
 class Comparable(Protocol):
     """
     the alphabet for a Lyndon word is ordered
@@ -38,6 +40,25 @@ def is_lyndon(a_list: List[U]) -> bool:
         if not a_list<=suffix:
             return False
     return True
+
+def generate_lyndons(ordered_alphabet : List[U], max_word_length : int):
+    """
+    generate the lyndon words in this ordered alphabet
+    starting from shortest up to a maximum word length
+    just the brute force generate and filter approach
+    if this becomes a hot path then replace with Duval
+    """
+    num_letters = len(ordered_alphabet)
+    if num_letters == 0:
+        raise ValueError("The alphabet must be nonempty")
+    for lyndon_length in range(1,max_word_length+1):
+        for first_idx in range(num_letters):
+            for rest_word in map(list,
+                                 itertools.permutations(
+                                     range(first_idx,num_letters),lyndon_length-1)):
+                int_word = [first_idx]+rest_word
+                if is_lyndon(int_word):
+                    yield [ordered_alphabet[idx] for idx in int_word]
 
 def neighboring_indices(face: List[T], this_vertex: T, that_vertex: T) -> Optional[Tuple[int,int]]:
     """

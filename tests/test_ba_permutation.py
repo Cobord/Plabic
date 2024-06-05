@@ -5,9 +5,7 @@ import itertools
 import random
 from math import factorial
 from typing import Dict,Set
-from plabic import AffinePermutation, BoundedAffinePermutation
-from plabic.ba_permutation import BruhatInterval
-from plabic.plabic_diagram import BiColor
+from plabic import AffinePermutation, BoundedAffinePermutation, BruhatInterval, BiColor
 
 def test_coxeter_muls():
     """
