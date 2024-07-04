@@ -6,6 +6,7 @@ from itertools import chain
 from typing import Dict, List, Tuple
 
 from plabic.cluster import Arithmetic
+from plabic.ownership_workarounds import SameObjectError
 from plabic.symbol_alphabet import Symbol,SymbolWord
 
 class TempExpression(Arithmetic):
@@ -128,6 +129,9 @@ def test_1_disappear():
                            lambda z: z.dlog(),
                            TempExpression("a")**0)
     assert logalphab1.am_i_zero()
+    assert logalphab1.to_integrands() == [{"alpha":TempExpression("alpha")**(-1)},
+                                          {"b":TempExpression("b")**(-1)},
+                                          {"1":TempExpression("1")**(-1)}]
     zeros_out = Symbol([(4.3,logalphab1),(0,logalphab1),(2,logalphab1)])
     assert len(zeros_out) == 0
 
@@ -241,7 +245,7 @@ def test_self_mul():
     errored = False
     try:
         one_logab.ishuffle_product(one_logab)
-    except ValueError as e:
+    except SameObjectError as e:
         assert str(e) == "The objects must have distinct ids. We don't know how to clone for you."
         errored = True
     assert errored
@@ -249,7 +253,7 @@ def test_self_mul():
     errored = False
     try:
         one_logab.ishuffle_many([one_logab])
-    except ValueError as e:
+    except SameObjectError as e:
         assert str(e) == "The objects must have distinct ids. We don't know how to clone for you."
         errored = True
     assert errored
@@ -300,5 +304,5 @@ def test_cell_var():
                 cur_coeff)
             full_iterable = chain(full_iterable, map(only_on_item,range(4+coeff)))
         else:
-            full_iterable = chain(full_iterable, map(lambda item: (cur_coeff,item),range(4)))
+            full_iterable = chain(full_iterable, map(lambda item: (cur_coeff,item),range(4+coeff)))
     assert list(full_iterable) == [(4*coeff,y) for coeff in range(10) for y in range(4+coeff)]

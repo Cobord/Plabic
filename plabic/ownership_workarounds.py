@@ -3,6 +3,10 @@ work arounds for two mutable references
 inputs to functions thought of as having taken ownership
 so anybody still with that pointer has results that can't be
 relied on
+e.g.
+    y += x
+    x is no longer a good object because of the class x,y belong too
+    and the way __iadd__ was written in that class
 """
 
 from collections import defaultdict
@@ -52,13 +56,15 @@ class SameObjectError(ValueError):
     """
     the two objects are exactly the same
     so lazy properties inside them won't behave correctly
+    when we have a function that expects two different
+    values of the same type
     """
 
 class ConsumedObjectError(ValueError):
     """
     this object has been consumed by being the argument
     in another method, so it should be garbage collected
-    already
-    but we don't have any ownership semantics to enforce this
+    already (or at least ready for garbage collection if that hasn't happened yet)
+    but we don't have any ownership semantics to enforce not reusing
     so we resort to throwing an exception
     """

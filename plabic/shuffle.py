@@ -3,6 +3,7 @@ Shuffles
 but lazily generated
 """
 
+from copy import deepcopy
 import itertools
 from typing import List, TypeVar
 
@@ -49,6 +50,8 @@ def shuffle_product(factor_1: List[T], factor_2: List[T]):
     """
     give the summands of the shuffle product
     """
+    if id(factor_1)==id(factor_2):
+        factor_2 = [deepcopy(z) for z in factor_1]
     n1 = len(factor_1)
     n2 = len(factor_2)
     concatenated : List[T] = list(itertools.chain(factor_1, factor_2))

@@ -54,3 +54,17 @@ def test_repeated_summand():
         assert summand_str in expected_shuffles
         summand_count += 1
     assert summand_count == 10
+
+def test_self_shuffle():
+    """
+    one object shuffled with itself so
+    it needs cloning first
+    """
+    factor = ["a","a","a"]
+    expected_shuffles = ["a"*(len(factor) + len(factor))]
+    summand_count = 0
+    for summand in shuffle_product(factor, factor):
+        summand_str = "".join(summand)
+        assert summand_str in expected_shuffles
+        summand_count += 1
+    assert summand_count == 20

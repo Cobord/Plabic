@@ -143,8 +143,9 @@ class Symbol(Generic[Tensorand,T]):
     def __iadd__(self,
                  other : Symbol[Tensorand,T]):
         """
-        x += x
-        necessitates the extra input so not just __iadd__
+        x += y
+        for x+=x
+        the id's are the same, so that is a special case
         """
         #pylint:disable=protected-access
         if self._invalidated or other._invalidated:
@@ -156,7 +157,8 @@ class Symbol(Generic[Tensorand,T]):
         self._num_summands += other._num_summands
         other._invalidated = True
 
-    def __isub__(self, other):
+    def __isub__(self,
+                 other : Symbol[Tensorand,T]):
         if self._invalidated or other._invalidated:
             raise ConsumedObjectError("This is an invalidated object")
         if id(self) == id(other):
@@ -277,7 +279,6 @@ class Symbol(Generic[Tensorand,T]):
         only materializes into a list instead of lazy generator chaining
         if the length is small enough
         other is consumed in the process
-        TODO test
         """
         #pylint:disable=protected-access
         if self._invalidated or other._invalidated:
