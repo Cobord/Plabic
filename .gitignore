@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 tests/all_mains.sh
+cache_clean.sh
