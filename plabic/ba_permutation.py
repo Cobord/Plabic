@@ -47,7 +47,7 @@ class ShiftEquivariantZBijection:
         construction_3 = juggling_pattern is not None
         construction_4 = coxeter_word is not None and n_val is not None
         how_many_of_123 = \
-            sum(1 if z_var else 0 for z_var in [construction_1,construction_3,construction_4])
+            sum(1 if z_var else 0 for z_var in [construction_1,construction_2,construction_3])
         if how_many_of_123>1:
             raise ValueError("Only one option should be used otherwise we would have to"+\
                              "test if they gave the same results")
