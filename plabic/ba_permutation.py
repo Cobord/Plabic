@@ -8,6 +8,8 @@ import itertools
 from math import gcd
 from typing import Dict, Iterator, List, Optional, Tuple, cast, Set
 
+from .demazure import OneLinePermutation
+
 from .plabic_diagram import BiColor, ExtraData, PlabicGraph, PlabicGraphBuilder
 
 #pylint:disable=invalid-name
@@ -35,7 +37,7 @@ class ShiftEquivariantZBijection:
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
                  juggling_pattern : Optional[List[int]]=None,
-                 my_sn : Optional[List[int]]=None,
+                 my_sn : Optional[OneLinePermutation]=None,
                  decorations : Optional[List[Optional[bool]]]=None,
                  to_bounded_affine : Optional[bool] = None,
                  n_val : Optional[int] = None,
@@ -51,7 +53,7 @@ class ShiftEquivariantZBijection:
                              "test if they gave the same results")
         used_construction_4 = False
         if construction_1:
-            my_sn = cast(List[int],my_sn)
+            my_sn = cast(OneLinePermutation,my_sn)
             if decorations is None:
                 decorations = [None]*len(my_sn)
             if to_bounded_affine is None:
@@ -118,7 +120,7 @@ class ShiftEquivariantZBijection:
                 if quot_f_jdx == quot_f_idx:
                     raise ValueError("This does not define a self-bijection of the integers")
 
-    def __lift_from_sn(self,my_sn : List[int],
+    def __lift_from_sn(self,my_sn : OneLinePermutation,
                      decorations : List[Optional[bool]],
                      to_bounded_affine : bool):
         """
@@ -261,7 +263,7 @@ class ShiftEquivariantZBijection:
             self.my_f[jdx_key-jdx+idx] = jdx_value
         self.is_lift_from_sn = all(1<=self[idx]<=self.my_n for idx in range(1,self.my_n+1))
 
-    def quot_to_sn(self) -> List[int]:
+    def quot_to_sn(self) -> OneLinePermutation:
         """
         Forget down to the residues modulo self.my_n
         """
@@ -293,7 +295,7 @@ class BoundedAffinePermutation:
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
                  juggling_pattern : Optional[List[int]]=None,
-                 my_sn : Optional[List[int]]=None,
+                 my_sn : Optional[OneLinePermutation]=None,
                  decorations : Optional[List[Optional[bool]]]=None,
                  n_val : Optional[int] = None,
                  check_multiple_constructions : bool = True):
@@ -321,7 +323,7 @@ class BoundedAffinePermutation:
     def __getitem__(self, idx: int) -> int:
         return self.my_underlying[idx]
 
-    def quot_to_sn(self) -> List[int]:
+    def quot_to_sn(self) -> OneLinePermutation:
         """
         Forget down to the residues modulo self.my_n
         """
@@ -489,7 +491,7 @@ class AffinePermutation:
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
                  juggling_pattern : Optional[List[int]]=None,
-                 my_sn : Optional[List[int]]=None,
+                 my_sn : Optional[OneLinePermutation]=None,
                  n_val : Optional[int] = None,
                  check_multiple_constructions : bool = True):
         self.my_underlying = ShiftEquivariantZBijection(coxeter_word=coxeter_word,
@@ -719,7 +721,7 @@ class AffinePermutation:
         # none of the easy strategies worked
         raise NotImplementedError
 
-    def quot_to_sn(self) -> List[int]:
+    def quot_to_sn(self) -> OneLinePermutation:
         """
         Forget down to the residues modulo self.my_n
         """

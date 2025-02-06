@@ -45,7 +45,7 @@ class SymbolWord(Generic[Tensorand,T]):
         for (cur_idx,letter) in enumerate(letters):
             vars_in_this_letter = 0
             for var in letters_variables(letter):
-                vars_in_this_letter = 0
+                vars_in_this_letter += 1
                 self.__used_letters.add(var)
             if vars_in_this_letter == 0:
                 self.__no_variable_idces.append(cur_idx)

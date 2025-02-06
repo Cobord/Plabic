@@ -17,3 +17,4 @@ from .bcfw_cell import BCFWCell, ButterflyData
 from .sign_pattern import SignPattern
 from .shuffle import inverse_of_shuffles, is_inverse_shuffle, shuffle_product
 from .symbol_alphabet import Symbol, SymbolWord
+from .demazure import OneLinePermutation, hopping_operator, up_arrow
