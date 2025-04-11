@@ -50,11 +50,15 @@ class Cluster(Generic[NT]):
     """
     a quiver and an instance of NT for each vertex
     """
+    #pylint:disable=too-many-arguments
     def __init__(self,
                  my_quiver : nx.MultiDiGraph,
                  initial_variables : List[NT],
                  multiplicative_identity : NT,
-                 simplifier : Callable[[NT],NT]):
+                 simplifier : Callable[[NT],NT],
+                 which_frozen: Optional[Set[VertexLabel]] = None):
+        if which_frozen is None:
+            which_frozen = set()
         if len(initial_variables) == 0:
             raise ValueError("There should be at least one generator")
         if my_quiver.number_of_nodes() != len(initial_variables):
@@ -75,6 +79,16 @@ class Cluster(Generic[NT]):
                         for idx,z in enumerate(my_quiver.nodes())}
         self.multiplicative_identity = multiplicative_identity
         self.simplifier = simplifier
+        self.frozen_variables : List[VertexLabel] = []
+        for frozen_var in which_frozen:
+            self.__freeze(frozen_var)
+
+    def __freeze(self, which_node: VertexLabel) -> None:
+        """
+        some of the variables are frozen
+        do so one at a time
+        """
+        self.frozen_variables.append(which_node)
 
     #pylint:disable=too-many-locals,too-many-branches
     def mutate(self,key : VertexLabel) -> None:
@@ -83,6 +97,8 @@ class Cluster(Generic[NT]):
         """
         if key not in self.cluster:
             raise ValueError(f"{key} was not a label for a vertex so we can't mutate there")
+        if key in self.frozen_variables:
+            raise ValueError(f"{key} was a frozen label so we can't mutate there")
         mutating_variable = self.cluster[key]
         to_edges : Dict[VertexLabel,int] = {}
         from_edges : Dict[VertexLabel,int] = {}
@@ -169,6 +185,27 @@ class Cluster(Generic[NT]):
         if not cluster_same(self.cluster,other.cluster):
             return False
         return self.my_antisymmetric() == other.my_antisymmetric()
+
+    def poisson_coeff(self, i_label: VertexLabel, j_label: VertexLabel) -> int:
+        """
+        {x_i, x_j} = lambda_{ij} x_i x_j
+        where x_i and x_j are the i,j values for keys i_label and j_label
+        """
+        raise NotImplementedError
+
+    def y_i(self, i_label: VertexLabel) -> NT:
+        """
+        the product of all the x_j^{B_{ji}} over j
+        """
+        raise NotImplementedError
+        #pylint:disable=unreachable
+        all_factors = [
+            self.cluster[j_label]**(
+                len(self.my_quiver.edges[i_label, j_label]) -
+                    len(self.my_quiver.edges[j_label, i_label])
+            )
+         for j_label in self.my_quiver.nodes()]
+        return reduce(lambda a,b: a*b, all_factors, self.multiplicative_identity)
 
     @staticmethod
     def make_type_an_cluster(my_n : int) -> Tuple[List[Expr],Cluster[Expr]]:
