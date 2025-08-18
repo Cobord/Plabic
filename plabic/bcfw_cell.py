@@ -18,7 +18,7 @@ class ButterflyData:
     """
     the data needed to do a buttefly product
     """
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-arguments, too-many-positional-arguments
     def __init__(self,a_gluing : int,b_gluing : int,
                  c_gluing : int,d_gluing : int,n_gluing : int):
         self.a_gluing = a_gluing

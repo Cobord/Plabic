@@ -232,7 +232,7 @@ class WeaklySeparatedCollection(SeparatedCollection):
                                             did_reverse=True)
         return None
 
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self,my_sets : List[Set[int]],*,
                  my_min : Optional[int] = None,
                  my_max : Optional[int] = None,

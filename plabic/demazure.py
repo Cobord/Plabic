@@ -7,7 +7,7 @@ from typing import List, Optional
 # does not actually check that it is a permutation
 OneLinePermutation = List[int]
 
-#pylint:disable=too-many-arguments,too-many-branches
+#pylint:disable=too-many-arguments, too-many-arguments, too-many-positional-arguments,too-many-branches
 def hopping_operator(t: int,
                      l_reversed: List[int],
                      w: OneLinePermutation,

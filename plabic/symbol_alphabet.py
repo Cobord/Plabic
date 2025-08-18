@@ -194,7 +194,7 @@ class Symbol(Generic[Tensorand,T]):
                         for (cur_coeff,cur_summand) in self._underlying]
         return Symbol(new_summands)
 
-    #pylint:disable=too-many-arguments,too-many-locals,too-many-branches
+    #pylint:disable=too-many-arguments, too-many-positional-arguments,too-many-locals,too-many-branches
     def ishuffle_many(self, rest: List[Symbol[Tensorand,T]],
                       materialize_length = 200,
                       do_multiprocess=True,

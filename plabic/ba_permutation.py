@@ -1,6 +1,7 @@
 """
 Bounded Affine Permutations
 """
+#pylint:disable=too-many-lines
 
 from __future__ import annotations
 from copy import deepcopy
@@ -15,24 +16,27 @@ from .plabic_diagram import BiColor, ExtraData, PlabicGraph, PlabicGraphBuilder
 #pylint:disable=invalid-name
 def lcm(a, b):
     """
-    math only has gcd available
+    the math module only has gcd available
     """
     return abs(a*b) // gcd(a, b)
 
 class ShiftEquivariantZBijection:
     """
-    Common to all bijections of Z
-    satisfying f(k+n) = f(k)+n for all k
-    for some n
+    This has the features common to all bijections of Z
+    which satisfy f(k+n) = f(k)+n for all k
+    for some n.
     One can also think of these as
     the invertible Hom(N,N) in the paracyclic category
-    N is either n,n+1 depending on notation
+    N is either n,n+1 depending on notational differences
+    in how paracyclic is defined.
+    There are many ways to initialize such an object
+    with keyword arguments. Choose any of them to do so.
     """
     my_n : int
     my_f : Dict[int,int]
     is_lift_from_sn : bool
 
-    # pylint:disable=too-many-locals, too-many-arguments
+    # pylint:disable=too-many-locals, too-many-arguments, too-many-positional-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
@@ -42,6 +46,25 @@ class ShiftEquivariantZBijection:
                  to_bounded_affine : Optional[bool] = None,
                  n_val : Optional[int] = None,
                  check_multiple_constructions : bool = True):
+        """
+        - coxeter_word, n_val: This is being regarded in the coxeter presentation of affine A type
+        - some_vals: If you know where some of the integers go under f and that gives enough
+            and consistent information to fix f entirely.
+            You may provide n_val, but if not that is also inferred.
+        - juggling_pattern: Watch Allen Knutson's talk both for the math
+            but also the juggling skills.
+        - my_sn: We start of with ordinary A type. Then possibly with the decorations we say which
+            ones cross over to the neighboring chunk of n_val.
+            But without decorations it is the manifest inclusion of
+            finite A type into affine A type. The to_bounded_affine informs us
+            to do a (k,n) bounded affine transformation instead.
+        
+        If check_multiple_constructions, then if we did multiple of the above then we also
+        have assertions to state all the produced f's are the same.
+        If it was false, we only are doing the construction one of the ways
+        and that is the final answer regardless if we would have gotten something else with
+        another method.
+        """
         construction_1 = my_sn is not None
         construction_2 = some_vals is not None
         construction_3 = juggling_pattern is not None
@@ -199,6 +222,10 @@ class ShiftEquivariantZBijection:
         return True
 
     def __getitem__(self,key : int) -> int:
+        """
+        This represents some f : Z -> Z,
+        so give f(key)
+        """
         if (key_value := self.my_f.get(key,None)) is not None:
             return key_value
         (quot,rem) = divmod(key,self.my_n)
@@ -290,7 +317,7 @@ class BoundedAffinePermutation:
     my_k : int
     my_n : int
 
-    # pylint:disable=too-many-arguments
+    # pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
@@ -299,6 +326,15 @@ class BoundedAffinePermutation:
                  decorations : Optional[List[Optional[bool]]]=None,
                  n_val : Optional[int] = None,
                  check_multiple_constructions : bool = True):
+        """
+        There are many options for constructions
+        as with ShiftEquivariantZBijection.
+        See there.
+        Then after my_underlying is constructed,
+        we make sure it is a (k,n) bounded affine permutation
+        and store those k and n. If not, an AssertionError or
+        ValueError occurs
+        """
         self.my_underlying = ShiftEquivariantZBijection(coxeter_word=coxeter_word,
                  some_vals=some_vals,
                  juggling_pattern=juggling_pattern,
@@ -486,7 +522,7 @@ class AffinePermutation:
     my_n : int
     is_lift_from_sn : bool
 
-    # pylint:disable=too-many-arguments
+    # pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self,*,
                  coxeter_word : Optional[List[int]]=None,
                  some_vals : Optional[Dict[int,int]]=None,
@@ -494,6 +530,13 @@ class AffinePermutation:
                  my_sn : Optional[OneLinePermutation]=None,
                  n_val : Optional[int] = None,
                  check_multiple_constructions : bool = True):
+        """
+        There are many options for constructions
+        as with ShiftEquivariantZBijection.
+        See there.
+        Then after my_underlying is constructed,
+        we make sure it is an affine permutation
+        """
         self.my_underlying = ShiftEquivariantZBijection(coxeter_word=coxeter_word,
                  some_vals=some_vals,
                  juggling_pattern=juggling_pattern,

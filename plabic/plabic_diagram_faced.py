@@ -4,6 +4,7 @@ this is used on top of that
 mostly delegates mutation stuff to the underlying PlabicGraph
 completely delegates the query stuff to the underlying PlabicGraph
 """
+#pylint:disable=duplicate-code
 
 from __future__ import annotations
 from itertools import chain
@@ -169,7 +170,7 @@ class PlabicDiagramFaced:
                 pass
         return success, explanation
 
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def insert_bivalent(self, this_vertex: str, that_vertex: str,
                         desired_color: BiColor,
                         desired_name: str,
@@ -252,7 +253,7 @@ class PlabicDiagramFaced:
                 self.__faces[idx] = face
         return success, explanation
 
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def split_vertex(self, this_vertex: str,
                      split_bounds: Tuple[int, int],
                      split_name_1: str,

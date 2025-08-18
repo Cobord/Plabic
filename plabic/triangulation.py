@@ -298,9 +298,11 @@ if __name__ == '__main__':
     p = t.to_plabic()
     p.draw()
     for tri_num in range(6):
+        #pylint:disable=invalid-name
         cur_triangle_name = f"triangle{tri_num}"
         assert p.my_kn_type(cur_triangle_name) == (1,8)
     for int_num,exp_contrib in enumerate([2,5,2,5,2,3,4,3]):
+        #pylint:disable=invalid-name
         cur_int_name = f"int{int_num}"
         assert p.my_kn_type(cur_int_name) == (2-exp_contrib,8)
     assert p.my_kn_type() == (2,8),f"{p.my_kn_type()}"

@@ -66,7 +66,7 @@ class PlanarNetwork:
             ret_val.append([cur_edge])
         return ret_val
 
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self, n: Nat, *, edge_list: Optional[List[List[EdgeData]]] = None,
                  chip_word: Optional[ChipWord] = None, chip_weights: Optional[List[WeightType]] = None,
                  multiplicative_identity: WeightType = 1.0,
@@ -298,7 +298,7 @@ def pairings_nc(i_set: Set[V], j_set: Set[W]) -> Set[Tuple[V, W]]:
     j_list.sort()
     return set(zip(i_list, j_list))
 
-# pylint:disable = too-many-arguments
+# pylint:disable = too-many-arguments, too-many-positional-arguments
 def determinant(matrix : List[List[NT]], mul : NT,
                 simplifier : Callable[[NT],NT],
                 additive_identity : NT,

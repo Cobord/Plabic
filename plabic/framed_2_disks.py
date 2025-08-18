@@ -66,7 +66,7 @@ class FramedDiskConfig:
         self.internal_circles.extend(other.internal_circles)
         return point_transformation
 
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-arguments, too-many-positional-arguments
     def draw(self,on_top_of_existing : bool = False,
              show_as_well : bool = True,
              draw_framing : bool = True,

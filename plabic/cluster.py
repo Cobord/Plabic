@@ -50,7 +50,7 @@ class Cluster(Generic[NT]):
     """
     a quiver and an instance of NT for each vertex
     """
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-arguments, too-many-positional-arguments
     def __init__(self,
                  my_quiver : nx.MultiDiGraph,
                  initial_variables : List[NT],

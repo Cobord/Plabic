@@ -128,7 +128,7 @@ class PlabicGraphBuilder:
         self.is_set_externals[idx] = True
         self.set_extras(external_vertex_name,extras)
 
-    # pylint:disable=too-many-arguments
+    # pylint:disable=too-many-arguments, too-many-positional-arguments
     def add_internal_bdry_vertex(self,internal_bdry_vertex_name : str,
                             which_circle : int,
                             where_in_that_circle : int,
@@ -280,7 +280,7 @@ class PlabicGraph:
     my_extra_props : Set[str]
     circles_config : Optional[FramedDiskConfig]
 
-    # pylint:disable = too-many-arguments, too-many-locals, too-many-branches,too-many-statements
+    # pylint:disable = too-many-arguments, too-many-positional-arguments, too-many-locals, too-many-branches,too-many-statements
     def __init__(self, my_init_data: Dict[str, Tuple[BiColor, List[str]]],
                  external_init_orientation: List[str],
                  multi_edge_permutation: Dict[Tuple[str, str], Dict[int, int]],

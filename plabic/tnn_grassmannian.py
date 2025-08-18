@@ -36,7 +36,7 @@ class MinorSignConstraints:
     - manifestly nonzero
     if a possible minor is not in any of these, then it is unconstrained
     """
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self,
                  which_positive : List[Set[int]],
                  which_negative : List[Set[int]],
@@ -329,7 +329,7 @@ class TNNGrassChart():
     the Plucker coordinates have some sign constraints
     the purpose of this is for positroid charts
     """
-    #pylint:disable=too-many-arguments
+    #pylint:disable=too-many-arguments, too-many-positional-arguments
     def __init__(self, my_matrix : List[List[Expr]],*,variables : List[Symbol],
                  sign_constraints : Union[MinorSignConstraints,PositroidySignConstraints],
                  check_tnn : bool = True,gives_positroid_cell : bool = False):
